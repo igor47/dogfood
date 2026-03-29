@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog, getDog } from "@src/db/dogs"
 import { listRecentEntries } from "@src/db/entries"
-import { listFoodEntries } from "@src/db/food-entries"
+import { createFoodEntry, getFoodEntry, listFoodEntries } from "@src/db/food-entries"
+import { createFood, updateFood } from "@src/db/foods"
 import { listHealthEntries } from "@src/db/health-entries"
 import { formatDatetime, toUtcSqlite } from "@src/lib/dates"
 import { useTestApp } from "@src/test/app"
@@ -106,6 +107,59 @@ describe("timeline entries", () => {
     const foodOnly = listRecentEntries(dog.id, 20, "food")
     expect(foodOnly).toHaveLength(1)
     expect(foodOnly[0]!.entry_type).toBe("food")
+  })
+})
+
+describe("effective calories", () => {
+  test("getFoodEntry computes calories from food catalog", () => {
+    const dog = createTestDog()
+    const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
+    const entry = createTestFoodEntry(dog.id, { food_id: food.id, quantity: 1.5 })
+
+    const fetched = getFoodEntry(entry.id)!
+    expect(fetched.effective_calories).toBe(525)
+  })
+
+  test("getFoodEntry uses stored calories when no food_id", () => {
+    const dog = createTestDog()
+    const entry = createFoodEntry({
+      dog_id: dog.id,
+      food_name: "Random treat",
+      entry_kind: "treat",
+      calories: 50,
+    })
+
+    const fetched = getFoodEntry(entry.id)!
+    expect(fetched.effective_calories).toBe(50)
+  })
+
+  test("effective_calories updates when food calories_per_unit changes", () => {
+    const dog = createTestDog()
+    const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
+    const entry = createTestFoodEntry(dog.id, { food_id: food.id, quantity: 1 })
+
+    expect(getFoodEntry(entry.id)!.effective_calories).toBe(350)
+
+    updateFood(food.id, { calories_per_unit: 400 })
+    expect(getFoodEntry(entry.id)!.effective_calories).toBe(400)
+  })
+
+  test("listFoodEntries includes effective_calories", () => {
+    const dog = createTestDog()
+    const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
+    createTestFoodEntry(dog.id, { food_id: food.id, quantity: 2 })
+
+    const entries = listFoodEntries(dog.id)
+    expect(entries[0]!.effective_calories).toBe(700)
+  })
+
+  test("timeline summary includes computed calories", () => {
+    const dog = createTestDog()
+    const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
+    createTestFoodEntry(dog.id, { food_id: food.id, quantity: 1 })
+
+    const entries = listRecentEntries(dog.id, 10, "food")
+    expect(entries[0]!.summary).toContain("350 cal")
   })
 })
 

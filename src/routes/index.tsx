@@ -21,6 +21,7 @@ indexRoutes.get("/", (c) => {
   const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
   const timelineEntries = listRecentEntries(dog.id, 50, type)
   const todaysFood = listFoodEntries(dog.id, 10)
+  const todaysTotalCal = todaysFood.reduce((sum, f) => sum + (f.effective_calories ?? 0), 0)
   const recentBowel = listBowelEntries(dog.id, 1)
   const lastBowel = recentBowel[0]
 
@@ -44,24 +45,31 @@ indexRoutes.get("/", (c) => {
               {todaysFood.length === 0 ? (
                 <p class="card-text text-muted">Nothing logged yet</p>
               ) : (
-                <ul class="list-unstyled mb-0">
-                  {todaysFood.map((f) => (
-                    <li>
-                      <span class="badge bg-secondary me-1">{f.entry_kind}</span>
-                      {f.food_name}
-                      {f.quantity != null && f.unit && (
-                        <span class="text-muted">
-                          {" "}
-                          — {f.quantity} {f.unit}
-                        </span>
-                      )}
-                      {f.calories != null && <span class="text-muted"> ({f.calories} cal)</span>}
-                      <small class="text-muted d-block">
-                        <Timestamp datetime={f.meal_time} format="time" />
-                      </small>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul class="list-unstyled mb-2">
+                    {todaysFood.map((f) => (
+                      <li>
+                        <span class="badge bg-secondary me-1">{f.entry_kind}</span>
+                        {f.food_name}
+                        {f.quantity != null && f.unit && (
+                          <span class="text-muted">
+                            {" "}
+                            — {f.quantity} {f.unit}
+                          </span>
+                        )}
+                        {f.effective_calories != null && (
+                          <span class="text-muted"> ({f.effective_calories} cal)</span>
+                        )}
+                        <small class="text-muted d-block">
+                          <Timestamp datetime={f.meal_time} format="time" />
+                        </small>
+                      </li>
+                    ))}
+                  </ul>
+                  {todaysTotalCal > 0 && (
+                    <div class="text-end text-muted small fw-bold">Total: {todaysTotalCal} cal</div>
+                  )}
+                </>
               )}
             </div>
           </div>

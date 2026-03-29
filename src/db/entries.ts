@@ -20,12 +20,14 @@ export function listRecentEntries(
 
   if (type === "all" || type === "food") {
     parts.push(`
-      SELECT id, dog_id, 'food' AS entry_type,
-        entry_kind || ': ' || food_name ||
-        COALESCE(' — ' || quantity || ' ' || unit, '') ||
-        COALESCE(' (' || CAST(CAST(calories AS INTEGER) AS TEXT) || ' cal)', '') AS summary,
-        meal_time AS occurred_at, created_at
-      FROM food_entries WHERE dog_id = ?
+      SELECT food_entries.id, food_entries.dog_id, 'food' AS entry_type,
+        food_entries.entry_kind || ': ' || food_entries.food_name ||
+        COALESCE(' — ' || food_entries.quantity || ' ' || food_entries.unit, '') ||
+        COALESCE(' (' || CAST(COALESCE(food_entries.calories, food_entries.quantity * foods.calories_per_unit) AS INTEGER) || ' cal)', '') AS summary,
+        food_entries.meal_time AS occurred_at, food_entries.created_at
+      FROM food_entries
+      LEFT JOIN foods ON food_entries.food_id = foods.id
+      WHERE food_entries.dog_id = ?
     `)
   }
 
