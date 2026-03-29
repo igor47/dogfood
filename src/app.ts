@@ -8,6 +8,7 @@ import { entriesRoutes } from "./routes/entries"
 import { foodsRoutes } from "./routes/foods"
 import { healthRoutes } from "./routes/health"
 import { indexRoutes } from "./routes/index"
+import { mcpRoutes } from "./routes/mcp"
 
 // Update typescript to indicate the title prop on the layout
 // see: https://hono.dev/docs/api/context#render-setrenderer
@@ -24,6 +25,9 @@ export function createApp() {
 
   // Health checks (no middleware, no auth, no logging)
   app.route("/", healthRoutes)
+
+  // MCP endpoint (JSON-RPC, before JSX renderer)
+  app.route("/", mcpRoutes)
 
   // JSX renderer — use the layout for all routes
   app.use(
