@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-3002}:3000"
+    volumes:
+      - app_data:/app/data
+    environment:
+      - MCP_BEARER_TOKEN=${MCP_BEARER_TOKEN:-}
+
+volumes:
+  app_data:
+    driver: local
