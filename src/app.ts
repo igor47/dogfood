@@ -4,6 +4,7 @@ import { Layout } from "./components/Layout"
 import { logger } from "./lib/logger"
 import { applyMiddleware } from "./middleware"
 import { cachingServeStatic } from "./middleware/cachingServeStatic"
+import { entriesRoutes } from "./routes/entries"
 import { healthRoutes } from "./routes/health"
 import { indexRoutes } from "./routes/index"
 
@@ -39,6 +40,7 @@ export function createApp() {
 
   // Routes
   app.route("/", indexRoutes)
+  app.route("/", entriesRoutes)
 
   // Error handler
   app.onError((err, c) => {

@@ -33,12 +33,40 @@ export const Layout = ({ children, title = "Dogfood" }: LayoutProps) => {
         <nav class="navbar navbar-expand-lg bg-body-tertiary">
           <div class="container-fluid">
             <a class="navbar-brand" href="/">
+              <i class="bi bi-heart-pulse me-1"></i>
               Dogfood
             </a>
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="/entries">
+                  Timeline
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/entries?type=food">
+                  Food
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/entries?type=bowel">
+                  Bowel
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/entries?type=health">
+                  Health
+                </a>
+              </li>
+            </ul>
+            <div class="d-flex gap-2">
+              <a href="/entries/new/food" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-plus-lg"></i> Log
+              </a>
+            </div>
           </div>
         </nav>
 
-        <main>{children}</main>
+        <main class="container mt-4">{children}</main>
 
         <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"

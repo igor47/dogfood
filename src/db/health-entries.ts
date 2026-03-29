@@ -1,11 +1,37 @@
 import { getDb } from "../db"
 import { ulid } from "../lib/ids"
 
+export const HEALTH_ENTRY_TYPES = [
+  { value: "energy", label: "Energy Level" },
+  { value: "activity", label: "Activity Level" },
+  { value: "vomiting", label: "Vomiting" },
+  { value: "gas", label: "Gas / Flatulence" },
+  { value: "appetite_change", label: "Appetite Change" },
+  { value: "lethargy", label: "Lethargy" },
+  { value: "water_intake", label: "Water Intake" },
+  { value: "weight", label: "Weight Check" },
+  { value: "medication", label: "Medication" },
+  { value: "vet_visit", label: "Vet Visit" },
+  { value: "other", label: "Other" },
+] as const
+
+export type HealthEntryType = (typeof HEALTH_ENTRY_TYPES)[number]["value"]
+
+export const SEVERITY_LEVELS = [
+  { value: 1, label: "1 — Mild / Low" },
+  { value: 2, label: "2" },
+  { value: 3, label: "3 — Moderate" },
+  { value: 4, label: "4" },
+  { value: 5, label: "5 — Severe / High" },
+] as const
+
+export type Severity = (typeof SEVERITY_LEVELS)[number]["value"]
+
 export interface HealthEntry {
   id: string
   dog_id: string
-  entry_type: string
-  severity: number
+  entry_type: HealthEntryType
+  severity: Severity
   occurred_at: string
   notes: string | null
   created_at: string
@@ -13,8 +39,8 @@ export interface HealthEntry {
 
 export function createHealthEntry(data: {
   dog_id: string
-  entry_type: string
-  severity?: number
+  entry_type: HealthEntryType
+  severity?: Severity
   occurred_at?: string
   notes?: string
 }): HealthEntry {

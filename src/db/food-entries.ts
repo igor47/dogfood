@@ -1,12 +1,24 @@
 import { getDb } from "../db"
 import { ulid } from "../lib/ids"
 
+export const FOOD_TYPES = [
+  { value: "kibble", label: "Kibble" },
+  { value: "wet", label: "Wet Food" },
+  { value: "raw", label: "Raw" },
+  { value: "treat", label: "Treat" },
+  { value: "human_food", label: "Human Food" },
+  { value: "supplement", label: "Supplement" },
+  { value: "other", label: "Other" },
+] as const
+
+export type FoodType = (typeof FOOD_TYPES)[number]["value"]
+
 export interface FoodEntry {
   id: string
   dog_id: string
   food_name: string
   brand: string | null
-  food_type: string
+  food_type: FoodType
   amount: string | null
   unit: string | null
   meal_time: string
@@ -18,7 +30,7 @@ export function createFoodEntry(data: {
   dog_id: string
   food_name: string
   brand?: string
-  food_type?: string
+  food_type?: FoodType
   amount?: string
   unit?: string
   meal_time?: string

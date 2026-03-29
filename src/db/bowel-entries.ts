@@ -1,15 +1,48 @@
 import { getDb } from "../db"
 import { ulid } from "../lib/ids"
 
+export const CONSISTENCY_SCALE = [
+  { value: 1, label: "Hard pellets" },
+  { value: 2, label: "Lumpy, sausage-shaped" },
+  { value: 3, label: "Sausage with cracks" },
+  { value: 4, label: "Smooth, soft sausage" },
+  { value: 5, label: "Soft blobs" },
+  { value: 6, label: "Mushy, no solid pieces" },
+  { value: 7, label: "Liquid, no solid pieces" },
+] as const
+
+export type Consistency = (typeof CONSISTENCY_SCALE)[number]["value"]
+
+export const BOWEL_COLORS = [
+  { value: "brown", label: "Brown" },
+  { value: "dark brown", label: "Dark Brown" },
+  { value: "light brown", label: "Light Brown" },
+  { value: "yellow", label: "Yellow" },
+  { value: "green", label: "Green" },
+  { value: "black", label: "Black" },
+  { value: "red", label: "Red" },
+  { value: "orange", label: "Orange" },
+] as const
+
+export type BowelColor = (typeof BOWEL_COLORS)[number]["value"]
+
+export const URGENCY_LEVELS = [
+  { value: 0, label: "Normal" },
+  { value: 1, label: "Somewhat urgent" },
+  { value: 2, label: "Very urgent" },
+] as const
+
+export type Urgency = (typeof URGENCY_LEVELS)[number]["value"]
+
 export interface BowelEntry {
   id: string
   dog_id: string
-  consistency: number
-  color: string | null
+  consistency: Consistency
+  color: BowelColor | null
   has_blood: number
   has_mucus: number
   straining: number
-  urgency: number
+  urgency: Urgency
   occurred_at: string
   notes: string | null
   created_at: string
@@ -17,12 +50,12 @@ export interface BowelEntry {
 
 export function createBowelEntry(data: {
   dog_id: string
-  consistency: number
-  color?: string
+  consistency: Consistency
+  color?: BowelColor
   has_blood?: boolean
   has_mucus?: boolean
   straining?: boolean
-  urgency?: number
+  urgency?: Urgency
   occurred_at?: string
   notes?: string
 }): BowelEntry {
