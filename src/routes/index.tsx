@@ -1,9 +1,9 @@
 import { EntryTimeline } from "@src/components/EntryTimeline"
+import { Timestamp } from "@src/components/Timestamp"
 import { CONSISTENCY_SCALE, listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog } from "@src/db/dogs"
 import { listRecentEntries } from "@src/db/entries"
 import { listFoodEntries } from "@src/db/food-entries"
-import { formatTime } from "@src/lib/dates"
 import { Hono } from "hono"
 
 export const indexRoutes = new Hono()
@@ -56,7 +56,9 @@ indexRoutes.get("/", (c) => {
                         </span>
                       )}
                       {f.calories != null && <span class="text-muted"> ({f.calories} cal)</span>}
-                      <small class="text-muted d-block">{formatTime(f.meal_time)}</small>
+                      <small class="text-muted d-block">
+                        <Timestamp datetime={f.meal_time} format="time" />
+                      </small>
                     </li>
                   ))}
                 </ul>
@@ -80,7 +82,9 @@ indexRoutes.get("/", (c) => {
                   {lastBowel.color && (
                     <small class="text-muted d-block">Color: {lastBowel.color}</small>
                   )}
-                  <small class="text-muted d-block">{formatTime(lastBowel.occurred_at)}</small>
+                  <small class="text-muted d-block">
+                    <Timestamp datetime={lastBowel.occurred_at} format="time" />
+                  </small>
                 </div>
               )}
             </div>

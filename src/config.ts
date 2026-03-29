@@ -7,6 +7,7 @@ export const config = {
   port: parseInt(process.env.PORT || "3002", 10),
   sqlitePath: process.env.SQLITE_PATH || "./data/db/dogfood.db",
   mcpBearerToken: process.env.MCP_BEARER_TOKEN || "",
+  displayTz: process.env.DISPLAY_TZ || "UTC",
   nodeEnv: process.env.NODE_ENV || "development",
   isProd: process.env.NODE_ENV === "production",
   isTest: process.env.NODE_ENV === "test",

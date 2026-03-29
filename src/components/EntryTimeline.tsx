@@ -1,5 +1,5 @@
+import { Timestamp } from "@src/components/Timestamp"
 import type { TimelineEntry } from "@src/db/entries"
-import { formatDatetime } from "@src/lib/dates"
 
 function entryIcon(type: string): string {
   switch (type) {
@@ -92,7 +92,9 @@ export const EntryTimeline = ({ entries, showTypeFilter, currentType }: EntryTim
               </span>
               <div class="flex-grow-1">
                 <div>{entry.summary}</div>
-                <small class="text-muted">{formatDatetime(entry.occurred_at)}</small>
+                <small class="text-muted">
+                  <Timestamp datetime={entry.occurred_at} />
+                </small>
               </div>
             </div>
           ))}

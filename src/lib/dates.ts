@@ -1,3 +1,4 @@
+import { config } from "@src/config"
 import { DateTime } from "luxon"
 
 /**
@@ -23,17 +24,17 @@ export function toUtcSqlite(input: string): string | null {
 }
 
 /**
- * Parse a UTC SQLite datetime string into a Luxon DateTime.
+ * Parse a UTC SQLite datetime string into a Luxon DateTime in the display timezone.
  */
 function fromSqlite(dateStr: string): DateTime {
   // Try SQL format first (YYYY-MM-DD HH:MM:SS)
   const dt = DateTime.fromSQL(dateStr, { zone: "utc" })
-  if (dt.isValid) return dt
+  if (dt.isValid) return dt.setZone(config.displayTz)
   // Fall back to ISO
   const iso = DateTime.fromISO(dateStr, { zone: "utc" })
-  if (iso.isValid) return iso
+  if (iso.isValid) return iso.setZone(config.displayTz)
   // Last resort
-  return DateTime.fromJSDate(new Date(dateStr))
+  return DateTime.fromJSDate(new Date(dateStr)).setZone(config.displayTz)
 }
 
 /**
@@ -41,10 +42,10 @@ function fromSqlite(dateStr: string): DateTime {
  * or "Mar 25 at 2:00 PM" for older dates.
  */
 export function formatDatetime(dateStr: string): string {
-  const dt = fromSqlite(dateStr).toLocal()
+  const dt = fromSqlite(dateStr)
   if (!dt.isValid) return "Invalid Date"
 
-  const now = DateTime.local()
+  const now = DateTime.now().setZone(config.displayTz)
   if (dt.hasSame(now, "day")) {
     return `Today at ${dt.toFormat("h:mm a")}`
   }
@@ -58,7 +59,7 @@ export function formatDatetime(dateStr: string): string {
  * Format a SQLite datetime as time only: "5:00 PM"
  */
 export function formatTime(dateStr: string): string {
-  const dt = fromSqlite(dateStr).toLocal()
+  const dt = fromSqlite(dateStr)
   if (!dt.isValid) return "Invalid Date"
   return dt.toFormat("h:mm a")
 }

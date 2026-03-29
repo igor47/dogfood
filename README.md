@@ -63,6 +63,7 @@ volumes:
 | `PORT` | `3000` (Docker) / `3002` (dev) | Server port |
 | `SQLITE_PATH` | `./data/db/dogfood.db` | SQLite database file path |
 | `MCP_BEARER_TOKEN` | *(none)* | Bearer token for MCP endpoint auth. If empty, `/mcp` is open. |
+| `DISPLAY_TZ` | `UTC` | Timezone for displaying dates (e.g. `America/Los_Angeles`). Dates are stored in UTC. |
 
 ### Data persistence
 

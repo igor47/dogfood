@@ -3,6 +3,7 @@ bun = "latest"
 
 [env]
 PORT = "3002"
+DISPLAY_TZ = "America/Los_Angeles"
 
 [tasks.install]
 run = "bun install"
