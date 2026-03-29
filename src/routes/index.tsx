@@ -3,14 +3,10 @@ import { CONSISTENCY_SCALE, listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog } from "@src/db/dogs"
 import { listRecentEntries } from "@src/db/entries"
 import { listFoodEntries } from "@src/db/food-entries"
+import { formatTime } from "@src/lib/dates"
 import { Hono } from "hono"
 
 export const indexRoutes = new Hono()
-
-function formatTime(dateStr: string): string {
-  const d = new Date(`${dateStr}Z`)
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-}
 
 // HTMX partial: returns just the timeline fragment
 indexRoutes.get("/timeline", (c) => {

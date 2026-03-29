@@ -4,6 +4,7 @@ import { getDefaultDog, getDog } from "@src/db/dogs"
 import { listRecentEntries } from "@src/db/entries"
 import { listFoodEntries } from "@src/db/food-entries"
 import { listHealthEntries } from "@src/db/health-entries"
+import { formatDatetime, toUtcSqlite } from "@src/lib/dates"
 import { useTestApp } from "@src/test/app"
 import {
   createTestBowelEntry,
@@ -105,5 +106,70 @@ describe("timeline entries", () => {
     const foodOnly = listRecentEntries(dog.id, 20, "food")
     expect(foodOnly).toHaveLength(1)
     expect(foodOnly[0]!.entry_type).toBe("food")
+  })
+})
+
+describe("date parsing", () => {
+  test("toUtcSqlite parses ISO 8601 with timezone offset", () => {
+    // This is the format claude.ai sends: "2026-03-28T05:00:00-07:00"
+    const result = toUtcSqlite("2026-03-28T05:00:00-07:00")
+    expect(result).toBe("2026-03-28 12:00:00")
+  })
+
+  test("toUtcSqlite parses ISO 8601 with Z suffix", () => {
+    const result = toUtcSqlite("2026-03-28T12:00:00Z")
+    expect(result).toBe("2026-03-28 12:00:00")
+  })
+
+  test("toUtcSqlite parses SQLite datetime format", () => {
+    const result = toUtcSqlite("2026-03-28 12:00:00")
+    expect(result).toBe("2026-03-28 12:00:00")
+  })
+
+  test("toUtcSqlite parses ISO without timezone as UTC", () => {
+    const result = toUtcSqlite("2026-03-28T12:00:00")
+    expect(result).toBe("2026-03-28 12:00:00")
+  })
+
+  test("toUtcSqlite returns null for invalid input", () => {
+    expect(toUtcSqlite("not a date")).toBeNull()
+    expect(toUtcSqlite("")).toBeNull()
+  })
+
+  test("food entries store normalized UTC dates from ISO with offset", () => {
+    const dog = createTestDog()
+    const entry = createTestFoodEntry(dog.id, {
+      meal_time: "2026-03-28T17:00:00-07:00",
+    })
+    // -07:00 offset means UTC is +7 hours = midnight UTC
+    expect(entry.meal_time).toBe("2026-03-29 00:00:00")
+  })
+
+  test("bowel entries store normalized UTC dates from ISO with offset", () => {
+    const dog = createTestDog()
+    const entry = createTestBowelEntry(dog.id, {
+      occurred_at: "2026-03-28T05:00:00-07:00",
+    })
+    expect(entry.occurred_at).toBe("2026-03-28 12:00:00")
+  })
+
+  test("health entries store normalized UTC dates from ISO with offset", () => {
+    const dog = createTestDog()
+    const entry = createTestHealthEntry(dog.id, {
+      occurred_at: "2026-03-28T05:00:00-07:00",
+    })
+    expect(entry.occurred_at).toBe("2026-03-28 12:00:00")
+  })
+
+  test("formatDatetime renders valid output for UTC SQLite dates", () => {
+    const result = formatDatetime("2026-03-28 12:00:00")
+    expect(result).not.toBe("Invalid Date")
+    // Should contain a time component
+    expect(result).toMatch(/\d+:\d+/)
+  })
+
+  test("formatDatetime renders valid output for ISO with offset", () => {
+    const result = formatDatetime("2026-03-28T05:00:00-07:00")
+    expect(result).not.toBe("Invalid Date")
   })
 })

@@ -24,7 +24,12 @@ export function createMcpServer(): McpServer {
       inputSchema: {
         food_id: z.string().describe("ID of the food from the catalog"),
         quantity: z.number().describe("Amount in the food's unit (e.g. 1.5 cups)"),
-        meal_time: z.string().optional().describe("ISO datetime, defaults to now"),
+        meal_time: z
+          .string()
+          .optional()
+          .describe(
+            "ISO 8601 datetime (e.g. 2026-03-28T16:00:00Z or 2026-03-28T09:00:00-07:00). Defaults to now."
+          ),
         notes: z.string().optional(),
       },
     },
@@ -72,7 +77,12 @@ export function createMcpServer(): McpServer {
         food_id: z.string().optional().describe("ID of the treat from the catalog, if defined"),
         food_name: z.string().optional().describe("Free-form name if not using a catalog food"),
         quantity: z.number().optional().default(1).describe("How many (defaults to 1)"),
-        meal_time: z.string().optional().describe("ISO datetime, defaults to now"),
+        meal_time: z
+          .string()
+          .optional()
+          .describe(
+            "ISO 8601 datetime (e.g. 2026-03-28T16:00:00Z or 2026-03-28T09:00:00-07:00). Defaults to now."
+          ),
         notes: z.string().optional(),
       },
     },
@@ -133,7 +143,12 @@ export function createMcpServer(): McpServer {
           .max(2)
           .optional()
           .describe("0=normal, 1=somewhat, 2=very urgent"),
-        occurred_at: z.string().optional().describe("ISO datetime, defaults to now"),
+        occurred_at: z
+          .string()
+          .optional()
+          .describe(
+            "ISO 8601 datetime (e.g. 2026-03-28T16:00:00Z or 2026-03-28T09:00:00-07:00). Defaults to now."
+          ),
         notes: z.string().optional(),
       },
     },
@@ -198,7 +213,12 @@ export function createMcpServer(): McpServer {
           .optional()
           .default(1)
           .describe("1=mild/low, 5=severe/high"),
-        occurred_at: z.string().optional().describe("ISO datetime, defaults to now"),
+        occurred_at: z
+          .string()
+          .optional()
+          .describe(
+            "ISO 8601 datetime (e.g. 2026-03-28T16:00:00Z or 2026-03-28T09:00:00-07:00). Defaults to now."
+          ),
         notes: z.string().optional(),
       },
     },

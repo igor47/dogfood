@@ -1,4 +1,5 @@
 import type { TimelineEntry } from "@src/db/entries"
+import { formatDatetime } from "@src/lib/dates"
 
 function entryIcon(type: string): string {
   switch (type) {
@@ -24,16 +25,6 @@ function entryBadgeClass(type: string): string {
     default:
       return "bg-secondary"
   }
-}
-
-function formatTime(dateStr: string): string {
-  const d = new Date(`${dateStr}Z`)
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  })
 }
 
 interface EntryTimelineProps {
@@ -101,7 +92,7 @@ export const EntryTimeline = ({ entries, showTypeFilter, currentType }: EntryTim
               </span>
               <div class="flex-grow-1">
                 <div>{entry.summary}</div>
-                <small class="text-muted">{formatTime(entry.occurred_at)}</small>
+                <small class="text-muted">{formatDatetime(entry.occurred_at)}</small>
               </div>
             </div>
           ))}

@@ -1,4 +1,5 @@
 import { getDb } from "../db"
+import { toUtcSqlite } from "../lib/dates"
 import { ulid } from "../lib/ids"
 
 export const ENTRY_KINDS = [
@@ -56,7 +57,7 @@ export function createFoodEntry(data: {
       data.unit ?? null,
       data.quantity ?? null,
       data.calories ?? null,
-      data.meal_time ?? null,
+      data.meal_time ? toUtcSqlite(data.meal_time) : null,
       data.notes ?? null,
     ]
   )

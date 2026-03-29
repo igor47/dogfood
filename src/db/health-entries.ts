@@ -1,4 +1,5 @@
 import { getDb } from "../db"
+import { toUtcSqlite } from "../lib/dates"
 import { ulid } from "../lib/ids"
 
 export const HEALTH_ENTRY_TYPES = [
@@ -54,7 +55,7 @@ export function createHealthEntry(data: {
       data.dog_id,
       data.entry_type,
       data.severity ?? 1,
-      data.occurred_at ?? null,
+      data.occurred_at ? toUtcSqlite(data.occurred_at) : null,
       data.notes ?? null,
     ]
   )

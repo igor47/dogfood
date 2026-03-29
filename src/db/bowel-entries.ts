@@ -1,4 +1,5 @@
 import { getDb } from "../db"
+import { toUtcSqlite } from "../lib/dates"
 import { ulid } from "../lib/ids"
 
 export const CONSISTENCY_SCALE = [
@@ -73,7 +74,7 @@ export function createBowelEntry(data: {
       data.has_mucus ? 1 : 0,
       data.straining ? 1 : 0,
       data.urgency ?? 0,
-      data.occurred_at ?? null,
+      data.occurred_at ? toUtcSqlite(data.occurred_at) : null,
       data.notes ?? null,
     ]
   )

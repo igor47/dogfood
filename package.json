@@ -15,12 +15,14 @@
     "hono": "latest",
     "htmx.org": "latest",
     "idiomorph": "latest",
+    "luxon": "^3.7.2",
     "ulid": "latest",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",
     "@types/bun": "latest",
+    "@types/luxon": "^3.7.1",
     "linkedom": "^0.18.12"
   },
   "peerDependencies": {
