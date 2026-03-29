@@ -15,14 +15,17 @@ export function createMcpServer(): McpServer {
     version: "1.0.0",
   })
 
-  server.tool(
+  server.registerTool(
     "log_meal",
-    "Log a meal the dog ate. Requires a food_id from the foods catalog. Use list_foods first to find the right food.",
     {
-      food_id: z.string().describe("ID of the food from the catalog"),
-      quantity: z.number().describe("Amount in the food's unit (e.g. 1.5 cups)"),
-      meal_time: z.string().optional().describe("ISO datetime, defaults to now"),
-      notes: z.string().optional(),
+      description:
+        "Log a meal the dog ate. Requires a food_id from the foods catalog. Use list_foods first to find the right food.",
+      inputSchema: {
+        food_id: z.string().describe("ID of the food from the catalog"),
+        quantity: z.number().describe("Amount in the food's unit (e.g. 1.5 cups)"),
+        meal_time: z.string().optional().describe("ISO datetime, defaults to now"),
+        notes: z.string().optional(),
+      },
     },
     async ({ food_id, quantity, meal_time, notes }) => {
       const dog = getDefaultDog()
@@ -34,7 +37,7 @@ export function createMcpServer(): McpServer {
       const calories =
         food.calories_per_unit != null ? Math.round(quantity * food.calories_per_unit) : null
 
-      const _entry = createFoodEntry({
+      createFoodEntry({
         dog_id: dog.id,
         food_id,
         food_name: food.name,
@@ -59,15 +62,18 @@ export function createMcpServer(): McpServer {
     }
   )
 
-  server.tool(
+  server.registerTool(
     "log_treat",
-    "Log a treat the dog ate. Can reference a food from the catalog or use a free-form name.",
     {
-      food_id: z.string().optional().describe("ID of the treat from the catalog, if defined"),
-      food_name: z.string().optional().describe("Free-form name if not using a catalog food"),
-      quantity: z.number().optional().default(1).describe("How many (defaults to 1)"),
-      meal_time: z.string().optional().describe("ISO datetime, defaults to now"),
-      notes: z.string().optional(),
+      description:
+        "Log a treat the dog ate. Can reference a food from the catalog or use a free-form name.",
+      inputSchema: {
+        food_id: z.string().optional().describe("ID of the treat from the catalog, if defined"),
+        food_name: z.string().optional().describe("Free-form name if not using a catalog food"),
+        quantity: z.number().optional().default(1).describe("How many (defaults to 1)"),
+        meal_time: z.string().optional().describe("ISO datetime, defaults to now"),
+        notes: z.string().optional(),
+      },
     },
     async ({ food_id, food_name, quantity, meal_time, notes }) => {
       const dog = getDefaultDog()
@@ -109,18 +115,26 @@ export function createMcpServer(): McpServer {
     }
   )
 
-  server.tool(
+  server.registerTool(
     "log_bowel_movement",
-    "Log a bowel movement. Consistency uses a 1-7 Bristol-like scale: 1=hard pellets, 2=lumpy sausage, 3=sausage with cracks, 4=smooth soft sausage (ideal), 5=soft blobs, 6=mushy, 7=liquid.",
     {
-      consistency: z.number().min(1).max(7).describe("Bristol scale 1-7"),
-      color: z.string().optional().describe("e.g. brown, dark brown, yellow, green, black, red"),
-      has_blood: z.boolean().optional(),
-      has_mucus: z.boolean().optional(),
-      straining: z.boolean().optional(),
-      urgency: z.number().min(0).max(2).optional().describe("0=normal, 1=somewhat, 2=very urgent"),
-      occurred_at: z.string().optional().describe("ISO datetime, defaults to now"),
-      notes: z.string().optional(),
+      description:
+        "Log a bowel movement. Consistency uses a 1-7 Bristol-like scale: 1=hard pellets, 2=lumpy sausage, 3=sausage with cracks, 4=smooth soft sausage (ideal), 5=soft blobs, 6=mushy, 7=liquid.",
+      inputSchema: {
+        consistency: z.number().min(1).max(7).describe("Bristol scale 1-7"),
+        color: z.string().optional().describe("e.g. brown, dark brown, yellow, green, black, red"),
+        has_blood: z.boolean().optional(),
+        has_mucus: z.boolean().optional(),
+        straining: z.boolean().optional(),
+        urgency: z
+          .number()
+          .min(0)
+          .max(2)
+          .optional()
+          .describe("0=normal, 1=somewhat, 2=very urgent"),
+        occurred_at: z.string().optional().describe("ISO datetime, defaults to now"),
+        notes: z.string().optional(),
+      },
     },
     async ({
       consistency,
@@ -155,34 +169,37 @@ export function createMcpServer(): McpServer {
     }
   )
 
-  server.tool(
+  server.registerTool(
     "log_health",
-    "Log a health observation: energy, activity, vomiting, gas, appetite_change, lethargy, water_intake, weight, medication, vet_visit, or other.",
     {
-      entry_type: z
-        .enum([
-          "energy",
-          "activity",
-          "vomiting",
-          "gas",
-          "appetite_change",
-          "lethargy",
-          "water_intake",
-          "weight",
-          "medication",
-          "vet_visit",
-          "other",
-        ])
-        .describe("Type of health observation"),
-      severity: z
-        .number()
-        .min(1)
-        .max(5)
-        .optional()
-        .default(1)
-        .describe("1=mild/low, 5=severe/high"),
-      occurred_at: z.string().optional().describe("ISO datetime, defaults to now"),
-      notes: z.string().optional(),
+      description:
+        "Log a health observation: energy, activity, vomiting, gas, appetite_change, lethargy, water_intake, weight, medication, vet_visit, or other.",
+      inputSchema: {
+        entry_type: z
+          .enum([
+            "energy",
+            "activity",
+            "vomiting",
+            "gas",
+            "appetite_change",
+            "lethargy",
+            "water_intake",
+            "weight",
+            "medication",
+            "vet_visit",
+            "other",
+          ])
+          .describe("Type of health observation"),
+        severity: z
+          .number()
+          .min(1)
+          .max(5)
+          .optional()
+          .default(1)
+          .describe("1=mild/low, 5=severe/high"),
+        occurred_at: z.string().optional().describe("ISO datetime, defaults to now"),
+        notes: z.string().optional(),
+      },
     },
     async ({ entry_type, severity, occurred_at, notes }) => {
       const dog = getDefaultDog()
@@ -204,14 +221,17 @@ export function createMcpServer(): McpServer {
     }
   )
 
-  server.tool(
+  server.registerTool(
     "list_foods",
-    "List all defined foods in the catalog, optionally filtered by category (meal or treat).",
     {
-      category: z
-        .enum(["meal", "treat"])
-        .optional()
-        .describe("Filter by category, or omit for all"),
+      description:
+        "List all defined foods in the catalog, optionally filtered by category (meal or treat).",
+      inputSchema: {
+        category: z
+          .enum(["meal", "treat"])
+          .optional()
+          .describe("Filter by category, or omit for all"),
+      },
     },
     async ({ category }) => {
       const foods = listFoods(category)
@@ -233,16 +253,18 @@ export function createMcpServer(): McpServer {
     }
   )
 
-  server.tool(
+  server.registerTool(
     "get_recent_entries",
-    "Get recent health log entries for the dog.",
     {
-      limit: z.number().optional().default(20),
-      entry_type: z
-        .enum(["food", "bowel", "health", "all"])
-        .optional()
-        .default("all")
-        .describe("Filter by entry type"),
+      description: "Get recent health log entries for the dog.",
+      inputSchema: {
+        limit: z.number().optional().default(20),
+        entry_type: z
+          .enum(["food", "bowel", "health", "all"])
+          .optional()
+          .default("all")
+          .describe("Filter by entry type"),
+      },
     },
     async ({ limit, entry_type }) => {
       const dog = getDefaultDog()
@@ -255,19 +277,25 @@ export function createMcpServer(): McpServer {
     }
   )
 
-  server.tool("get_dog_profile", "Get the dog's profile information.", {}, async () => {
-    const dog = getDefaultDog()
-    const info = [
-      `Name: ${dog.name}`,
-      dog.breed ? `Breed: ${dog.breed}` : null,
-      dog.birth_date ? `Birth date: ${dog.birth_date}` : null,
-      dog.weight_kg != null ? `Weight: ${dog.weight_kg} kg` : null,
-      dog.notes ? `Notes: ${dog.notes}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n")
-    return { content: [{ type: "text" as const, text: info }] }
-  })
+  server.registerTool(
+    "get_dog_profile",
+    {
+      description: "Get the dog's profile information.",
+    },
+    async () => {
+      const dog = getDefaultDog()
+      const info = [
+        `Name: ${dog.name}`,
+        dog.breed ? `Breed: ${dog.breed}` : null,
+        dog.birth_date ? `Birth date: ${dog.birth_date}` : null,
+        dog.weight_kg != null ? `Weight: ${dog.weight_kg} kg` : null,
+        dog.notes ? `Notes: ${dog.notes}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+      return { content: [{ type: "text" as const, text: info }] }
+    }
+  )
 
   return server
 }
