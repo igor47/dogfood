@@ -3,7 +3,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { listBowelEntries } from "@src/db/bowel-entries"
 import { listFoodEntries } from "@src/db/food-entries"
-import { createFood } from "@src/db/foods"
+import { createFood, listFoods } from "@src/db/foods"
 import { listHealthEntries } from "@src/db/health-entries"
 import { useTestApp } from "@src/test/app"
 import {
@@ -35,6 +35,26 @@ function textContent(result: Awaited<ReturnType<Client["callTool"]>>): string {
 }
 
 describe("MCP tools", () => {
+  test("add_food creates a food in the catalog", async () => {
+    const client = await createTestClient()
+    const result = await client.callTool({
+      name: "add_food",
+      arguments: {
+        name: "Boiled Ground Turkey",
+        category: "meal",
+        unit: "oz",
+        calories_per_unit: 50,
+      },
+    })
+    const text = textContent(result)
+    expect(text).toContain("Boiled Ground Turkey")
+    expect(text).toContain("50 cal/oz")
+
+    const foods = listFoods("meal")
+    expect(foods).toHaveLength(1)
+    expect(foods[0]!.name).toBe("Boiled Ground Turkey")
+  })
+
   test("list_foods returns empty message when no foods defined", async () => {
     const client = await createTestClient()
     const result = await client.callTool({ name: "list_foods", arguments: {} })

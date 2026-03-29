@@ -4,7 +4,8 @@ import { createBowelEntry } from "@src/db/bowel-entries"
 import { getDefaultDog } from "@src/db/dogs"
 import { listRecentEntries } from "@src/db/entries"
 import { createFoodEntry } from "@src/db/food-entries"
-import { getFood, listFoods } from "@src/db/foods"
+import type { FoodCategory } from "@src/db/foods"
+import { createFood, getFood, listFoods } from "@src/db/foods"
 import type { HealthEntryType, Severity } from "@src/db/health-entries"
 import { createHealthEntry } from "@src/db/health-entries"
 import { z } from "zod"
@@ -215,6 +216,42 @@ export function createMcpServer(): McpServer {
           {
             type: "text" as const,
             text: `Logged ${entry.entry_type} (severity: ${entry.severity}/5)`,
+          },
+        ],
+      }
+    }
+  )
+
+  server.registerTool(
+    "add_food",
+    {
+      description:
+        "Add a food to the catalog. Foods define a name, brand, category (meal or treat), unit of measurement, and optional calories per unit.",
+      inputSchema: {
+        name: z.string().describe("Name of the food"),
+        brand: z.string().optional().describe("Brand name if applicable"),
+        category: z.enum(["meal", "treat"]).optional().default("meal"),
+        unit: z.string().describe("Unit of measurement, e.g. cups, oz, pieces, filet"),
+        calories_per_unit: z.number().optional().describe("Calories per one unit"),
+        notes: z.string().optional(),
+      },
+    },
+    async ({ name, brand, category, unit, calories_per_unit, notes }) => {
+      const food = createFood({
+        name,
+        brand,
+        category: category as FoodCategory,
+        unit,
+        calories_per_unit,
+        notes,
+      })
+      const cal =
+        food.calories_per_unit != null ? `, ${food.calories_per_unit} cal/${food.unit}` : ""
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Added food: [${food.id}] ${food.name}${food.brand ? ` (${food.brand})` : ""} — ${food.category}, unit: ${food.unit}${cal}`,
           },
         ],
       }
