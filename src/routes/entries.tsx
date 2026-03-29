@@ -1,7 +1,6 @@
 import type { BowelColor, Consistency, Urgency } from "@src/db/bowel-entries"
 import { createBowelEntry } from "@src/db/bowel-entries"
 import { getDefaultDog, updateDog } from "@src/db/dogs"
-import { listRecentEntries } from "@src/db/entries"
 import type { FoodType } from "@src/db/food-entries"
 import { createFoodEntry } from "@src/db/food-entries"
 import type { HealthEntryType, Severity } from "@src/db/health-entries"
@@ -9,26 +8,10 @@ import { createHealthEntry } from "@src/db/health-entries"
 import { Hono } from "hono"
 import type { HtmlEscapedString } from "hono/utils/html"
 import { BowelEntryForm } from "../components/BowelEntryForm"
-import { EntryTimeline } from "../components/EntryTimeline"
 import { FoodEntryForm } from "../components/FoodEntryForm"
 import { HealthEntryForm } from "../components/HealthEntryForm"
 
 export const entriesRoutes = new Hono()
-
-// Timeline view
-entriesRoutes.get("/entries", (c) => {
-  const dog = getDefaultDog()
-  const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
-  const entries = listRecentEntries(dog.id, 50, type)
-
-  return c.render(
-    <div>
-      <h2>Timeline</h2>
-      <EntryTimeline entries={entries} showTypeFilter currentType={type} />
-    </div>,
-    { title: "Dogfood — Timeline" }
-  )
-})
 
 // New entry forms
 entriesRoutes.get("/entries/new/:type", (c) => {
@@ -85,8 +68,8 @@ entriesRoutes.post("/entries/new/food", async (c) => {
 
   return c.html(
     <div class="alert alert-success">
-      Logged <strong>{body.food_name as string}</strong>.{" "}
-      <a href="/entries?type=food">View food log</a> or <a href="/entries/new/food">log another</a>.
+      Logged <strong>{body.food_name as string}</strong>. <a href="/?type=food">View food log</a> or{" "}
+      <a href="/entries/new/food">log another</a>.
     </div>
   )
 })
@@ -110,8 +93,7 @@ entriesRoutes.post("/entries/new/bowel", async (c) => {
   return c.html(
     <div class="alert alert-success">
       Logged bowel movement (consistency: {entry.consistency}/7).{" "}
-      <a href="/entries?type=bowel">View bowel log</a> or{" "}
-      <a href="/entries/new/bowel">log another</a>.
+      <a href="/?type=bowel">View bowel log</a> or <a href="/entries/new/bowel">log another</a>.
     </div>
   )
 })
@@ -131,8 +113,7 @@ entriesRoutes.post("/entries/new/health", async (c) => {
   return c.html(
     <div class="alert alert-success">
       Logged {entry.entry_type} (severity: {entry.severity}/5).{" "}
-      <a href="/entries?type=health">View health log</a> or{" "}
-      <a href="/entries/new/health">log another</a>.
+      <a href="/?type=health">View health log</a> or <a href="/entries/new/health">log another</a>.
     </div>
   )
 })

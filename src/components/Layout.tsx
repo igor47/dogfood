@@ -36,29 +36,7 @@ export const Layout = ({ children, title = "Dogfood" }: LayoutProps) => {
               <i class="bi bi-heart-pulse me-1"></i>
               Dogfood
             </a>
-            <ul class="navbar-nav me-auto">
-              <li class="nav-item">
-                <a class="nav-link" href="/entries">
-                  Timeline
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/entries?type=food">
-                  Food
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/entries?type=bowel">
-                  Bowel
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/entries?type=health">
-                  Health
-                </a>
-              </li>
-            </ul>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 ms-auto">
               <a href="/entries/new/food" class="btn btn-sm btn-outline-success">
                 <i class="bi bi-plus-lg"></i> Log
               </a>

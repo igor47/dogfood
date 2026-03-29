@@ -12,9 +12,18 @@ function formatTime(dateStr: string): string {
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
 }
 
+// HTMX partial: returns just the timeline fragment
+indexRoutes.get("/timeline", (c) => {
+  const dog = getDefaultDog()
+  const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
+  const entries = listRecentEntries(dog.id, 50, type)
+  return c.html(<EntryTimeline entries={entries} showTypeFilter currentType={type} />)
+})
+
 indexRoutes.get("/", (c) => {
   const dog = getDefaultDog()
-  const recentEntries = listRecentEntries(dog.id, 10)
+  const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
+  const timelineEntries = listRecentEntries(dog.id, 50, type)
   const todaysFood = listFoodEntries(dog.id, 10)
   const recentBowel = listBowelEntries(dog.id, 1)
   const lastBowel = recentBowel[0]
@@ -95,9 +104,9 @@ indexRoutes.get("/", (c) => {
         </div>
       </div>
 
-      <h4>Recent Activity</h4>
-      <EntryTimeline entries={recentEntries} />
+      <h4>Timeline</h4>
+      <EntryTimeline entries={timelineEntries} showTypeFilter currentType={type} />
     </div>,
-    { title: "Dogfood — Dashboard" }
+    { title: "Dogfood" }
   )
 })

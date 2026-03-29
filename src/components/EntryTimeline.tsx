@@ -47,30 +47,46 @@ export const EntryTimeline = ({ entries, showTypeFilter, currentType }: EntryTim
     <div id="entry-timeline">
       {showTypeFilter && (
         <div class="btn-group mb-3" role="toolbar" aria-label="Filter entries by type">
-          <a
-            href="/entries"
+          <button
+            type="button"
+            hx-get="/timeline"
+            hx-target="#entry-timeline"
+            hx-swap="outerHTML"
+            hx-push-url="/"
             class={`btn btn-sm ${!currentType || currentType === "all" ? "btn-primary" : "btn-outline-primary"}`}
           >
             All
-          </a>
-          <a
-            href="/entries?type=food"
+          </button>
+          <button
+            type="button"
+            hx-get="/timeline?type=food"
+            hx-target="#entry-timeline"
+            hx-swap="outerHTML"
+            hx-push-url="/?type=food"
             class={`btn btn-sm ${currentType === "food" ? "btn-success" : "btn-outline-success"}`}
           >
             Food
-          </a>
-          <a
-            href="/entries?type=bowel"
+          </button>
+          <button
+            type="button"
+            hx-get="/timeline?type=bowel"
+            hx-target="#entry-timeline"
+            hx-swap="outerHTML"
+            hx-push-url="/?type=bowel"
             class={`btn btn-sm ${currentType === "bowel" ? "btn-warning" : "btn-outline-warning"}`}
           >
             Bowel
-          </a>
-          <a
-            href="/entries?type=health"
+          </button>
+          <button
+            type="button"
+            hx-get="/timeline?type=health"
+            hx-target="#entry-timeline"
+            hx-swap="outerHTML"
+            hx-push-url="/?type=health"
             class={`btn btn-sm ${currentType === "health" ? "btn-info" : "btn-outline-info"}`}
           >
             Health
-          </a>
+          </button>
         </div>
       )}
 
