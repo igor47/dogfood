@@ -51,7 +51,6 @@ export function createMcpServer(): McpServer {
         entry_kind: "meal",
         quantity,
         unit: food.unit,
-        calories: calories ?? undefined,
         meal_time,
         notes,
       })
@@ -114,7 +113,6 @@ export function createMcpServer(): McpServer {
         entry_kind: "treat",
         quantity,
         unit,
-        calories,
         meal_time,
         notes,
       })

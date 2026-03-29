@@ -70,8 +70,6 @@ entriesRoutes.post("/entries/new/meal", async (c) => {
   if (!food) return c.text("Food not found", 400)
 
   const quantity = parseFloat(body.quantity as string)
-  const calories =
-    food.calories_per_unit != null ? Math.round(quantity * food.calories_per_unit) : null
 
   createFoodEntry({
     dog_id: dog.id,
@@ -81,16 +79,14 @@ entriesRoutes.post("/entries/new/meal", async (c) => {
     entry_kind: "meal",
     quantity,
     unit: food.unit,
-    calories: calories ?? undefined,
     meal_time: (body.meal_time as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
-  const calStr = calories != null ? ` (${calories} cal)` : ""
   return c.html(
     <div class="alert alert-success">
-      Logged {quantity} {food.unit} of <strong>{food.name}</strong>
-      {calStr}. <a href="/">Dashboard</a> or <a href="/entries/new/meal">log another</a>.
+      Logged {quantity} {food.unit} of <strong>{food.name}</strong>. <a href="/">Dashboard</a> or{" "}
+      <a href="/entries/new/meal">log another</a>.
     </div>
   )
 })
@@ -105,16 +101,12 @@ entriesRoutes.post("/entries/new/treat", async (c) => {
 
   let foodName: string
   let unit: string | undefined
-  let calories: number | undefined
 
   if (foodId) {
     const food = getFood(foodId)
     if (!food) return c.text("Food not found", 400)
     foodName = food.name
     unit = food.unit
-    if (food.calories_per_unit != null) {
-      calories = Math.round(quantity * food.calories_per_unit)
-    }
   } else {
     foodName = (body.food_name as string) || "Treat"
   }
@@ -126,16 +118,14 @@ entriesRoutes.post("/entries/new/treat", async (c) => {
     entry_kind: "treat",
     quantity,
     unit,
-    calories,
     meal_time: (body.meal_time as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
-  const calStr = calories != null ? ` (${calories} cal)` : ""
   return c.html(
     <div class="alert alert-success">
-      Logged {quantity} x <strong>{foodName}</strong>
-      {calStr}. <a href="/">Dashboard</a> or <a href="/entries/new/treat">log another</a>.
+      Logged {quantity} x <strong>{foodName}</strong>. <a href="/">Dashboard</a> or{" "}
+      <a href="/entries/new/treat">log another</a>.
     </div>
   )
 })

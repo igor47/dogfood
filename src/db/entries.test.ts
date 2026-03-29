@@ -110,47 +110,46 @@ describe("timeline entries", () => {
   })
 })
 
-describe("effective calories", () => {
+describe("computed calories", () => {
   test("getFoodEntry computes calories from food catalog", () => {
     const dog = createTestDog()
     const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
     const entry = createTestFoodEntry(dog.id, { food_id: food.id, quantity: 1.5 })
 
     const fetched = getFoodEntry(entry.id)!
-    expect(fetched.effective_calories).toBe(525)
+    expect(fetched.calories).toBe(525)
   })
 
-  test("getFoodEntry uses stored calories when no food_id", () => {
+  test("getFoodEntry returns null calories when no food_id", () => {
     const dog = createTestDog()
     const entry = createFoodEntry({
       dog_id: dog.id,
       food_name: "Random treat",
       entry_kind: "treat",
-      calories: 50,
     })
 
     const fetched = getFoodEntry(entry.id)!
-    expect(fetched.effective_calories).toBe(50)
+    expect(fetched.calories).toBeNull()
   })
 
-  test("effective_calories updates when food calories_per_unit changes", () => {
+  test("calories update when food calories_per_unit changes", () => {
     const dog = createTestDog()
     const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
     const entry = createTestFoodEntry(dog.id, { food_id: food.id, quantity: 1 })
 
-    expect(getFoodEntry(entry.id)!.effective_calories).toBe(350)
+    expect(getFoodEntry(entry.id)!.calories).toBe(350)
 
     updateFood(food.id, { calories_per_unit: 400 })
-    expect(getFoodEntry(entry.id)!.effective_calories).toBe(400)
+    expect(getFoodEntry(entry.id)!.calories).toBe(400)
   })
 
-  test("listFoodEntries includes effective_calories", () => {
+  test("listFoodEntries includes computed calories", () => {
     const dog = createTestDog()
     const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
     createTestFoodEntry(dog.id, { food_id: food.id, quantity: 2 })
 
     const entries = listFoodEntries(dog.id)
-    expect(entries[0]!.effective_calories).toBe(700)
+    expect(entries[0]!.calories).toBe(700)
   })
 
   test("timeline summary includes computed calories", () => {

@@ -20,10 +20,10 @@ export interface FoodEntry {
   amount: string | null
   unit: string | null
   quantity: number | null
-  calories: number | null
   meal_time: string
   notes: string | null
   created_at: string
+  calories: number | null
 }
 
 export function createFoodEntry(data: {
@@ -36,15 +36,14 @@ export function createFoodEntry(data: {
   amount?: string
   unit?: string
   quantity?: number
-  calories?: number
   meal_time?: string
   notes?: string
 }): FoodEntry {
   const db = getDb()
   const id = ulid()
   db.run(
-    `INSERT INTO food_entries (id, dog_id, food_id, food_name, brand, food_type, entry_kind, amount, unit, quantity, calories, meal_time, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?)`,
+    `INSERT INTO food_entries (id, dog_id, food_id, food_name, brand, food_type, entry_kind, amount, unit, quantity, meal_time, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?)`,
     [
       id,
       data.dog_id,
@@ -56,7 +55,6 @@ export function createFoodEntry(data: {
       data.amount ?? null,
       data.unit ?? null,
       data.quantity ?? null,
-      data.calories ?? null,
       data.meal_time ? toUtcSqlite(data.meal_time) : null,
       data.notes ?? null,
     ]
@@ -66,40 +64,30 @@ export function createFoodEntry(data: {
 
 const FOOD_ENTRY_SELECT = `
   SELECT food_entries.*,
-    CAST(COALESCE(food_entries.calories, food_entries.quantity * foods.calories_per_unit) AS INTEGER) AS effective_calories
+    CAST(food_entries.quantity * foods.calories_per_unit AS INTEGER) AS calories
   FROM food_entries
   LEFT JOIN foods ON food_entries.food_id = foods.id
 `
 
-export interface FoodEntryWithCalories extends FoodEntry {
-  effective_calories: number | null
-}
-
-export function getFoodEntry(id: string): FoodEntryWithCalories | null {
+export function getFoodEntry(id: string): FoodEntry | null {
   const db = getDb()
-  return db
-    .query(`${FOOD_ENTRY_SELECT} WHERE food_entries.id = ?`)
-    .get(id) as FoodEntryWithCalories | null
+  return db.query(`${FOOD_ENTRY_SELECT} WHERE food_entries.id = ?`).get(id) as FoodEntry | null
 }
 
-export function listFoodEntries(
-  dogId: string,
-  limit = 50,
-  kind?: EntryKind
-): FoodEntryWithCalories[] {
+export function listFoodEntries(dogId: string, limit = 50, kind?: EntryKind): FoodEntry[] {
   const db = getDb()
   if (kind) {
     return db
       .query(
         `${FOOD_ENTRY_SELECT} WHERE food_entries.dog_id = ? AND food_entries.entry_kind = ? ORDER BY food_entries.meal_time DESC LIMIT ?`
       )
-      .all(dogId, kind, limit) as FoodEntryWithCalories[]
+      .all(dogId, kind, limit) as FoodEntry[]
   }
   return db
     .query(
       `${FOOD_ENTRY_SELECT} WHERE food_entries.dog_id = ? ORDER BY food_entries.meal_time DESC LIMIT ?`
     )
-    .all(dogId, limit) as FoodEntryWithCalories[]
+    .all(dogId, limit) as FoodEntry[]
 }
 
 export function deleteFoodEntry(id: string): void {
