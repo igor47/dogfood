@@ -37,7 +37,7 @@ describe("food entries", () => {
   test("create and list food entries", () => {
     const dog = createTestDog()
     createTestFoodEntry(dog.id, { food_name: "Chicken kibble" })
-    createTestFoodEntry(dog.id, { food_name: "Dental treat", food_type: "treat" })
+    createTestFoodEntry(dog.id, { food_name: "Dental treat", entry_kind: "treat" })
 
     const entries = listFoodEntries(dog.id)
     expect(entries).toHaveLength(2)

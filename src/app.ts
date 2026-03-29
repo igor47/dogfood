@@ -5,6 +5,7 @@ import { logger } from "./lib/logger"
 import { applyMiddleware } from "./middleware"
 import { cachingServeStatic } from "./middleware/cachingServeStatic"
 import { entriesRoutes } from "./routes/entries"
+import { foodsRoutes } from "./routes/foods"
 import { healthRoutes } from "./routes/health"
 import { indexRoutes } from "./routes/index"
 
@@ -41,6 +42,7 @@ export function createApp() {
   // Routes
   app.route("/", indexRoutes)
   app.route("/", entriesRoutes)
+  app.route("/", foodsRoutes)
 
   // Error handler
   app.onError((err, c) => {

@@ -51,8 +51,15 @@ indexRoutes.get("/", (c) => {
                 <ul class="list-unstyled mb-0">
                   {todaysFood.map((f) => (
                     <li>
+                      <span class="badge bg-secondary me-1">{f.entry_kind}</span>
                       {f.food_name}
-                      {f.amount && <span class="text-muted"> — {f.amount}</span>}
+                      {f.quantity != null && f.unit && (
+                        <span class="text-muted">
+                          {" "}
+                          — {f.quantity} {f.unit}
+                        </span>
+                      )}
+                      {f.calories != null && <span class="text-muted"> ({f.calories} cal)</span>}
                       <small class="text-muted d-block">{formatTime(f.meal_time)}</small>
                     </li>
                   ))}
@@ -89,8 +96,11 @@ indexRoutes.get("/", (c) => {
             <div class="card-body">
               <h6 class="card-subtitle mb-2 text-muted">Quick Log</h6>
               <div class="d-flex flex-column gap-2">
-                <a href="/entries/new/food" class="btn btn-sm btn-outline-success">
-                  <i class="bi bi-egg-fried"></i> Food
+                <a href="/entries/new/meal" class="btn btn-sm btn-outline-success">
+                  <i class="bi bi-egg-fried"></i> Meal
+                </a>
+                <a href="/entries/new/treat" class="btn btn-sm btn-outline-success">
+                  <i class="bi bi-gift"></i> Treat
                 </a>
                 <a href="/entries/new/bowel" class="btn btn-sm btn-outline-warning">
                   <i class="bi bi-circle-fill"></i> Bowel

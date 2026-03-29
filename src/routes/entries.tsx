@@ -1,15 +1,16 @@
 import type { BowelColor, Consistency, Urgency } from "@src/db/bowel-entries"
 import { createBowelEntry } from "@src/db/bowel-entries"
 import { getDefaultDog, updateDog } from "@src/db/dogs"
-import type { FoodType } from "@src/db/food-entries"
 import { createFoodEntry } from "@src/db/food-entries"
+import { getFood, listFoods } from "@src/db/foods"
 import type { HealthEntryType, Severity } from "@src/db/health-entries"
 import { createHealthEntry } from "@src/db/health-entries"
 import { Hono } from "hono"
 import type { HtmlEscapedString } from "hono/utils/html"
 import { BowelEntryForm } from "../components/BowelEntryForm"
-import { FoodEntryForm } from "../components/FoodEntryForm"
 import { HealthEntryForm } from "../components/HealthEntryForm"
+import { MealEntryForm } from "../components/MealEntryForm"
+import { TreatEntryForm } from "../components/TreatEntryForm"
 
 export const entriesRoutes = new Hono()
 
@@ -21,10 +22,18 @@ entriesRoutes.get("/entries/new/:type", (c) => {
   let form: HtmlEscapedString | Promise<HtmlEscapedString>
 
   switch (type) {
-    case "food":
-      title = "Log Food"
-      form = <FoodEntryForm />
+    case "meal": {
+      title = "Log Meal"
+      const mealFoods = listFoods("meal")
+      form = <MealEntryForm foods={mealFoods} />
       break
+    }
+    case "treat": {
+      title = "Log Treat"
+      const treatFoods = listFoods("treat")
+      form = <TreatEntryForm foods={treatFoods} />
+      break
+    }
     case "bowel":
       title = "Log Bowel Movement"
       form = <BowelEntryForm />
@@ -51,25 +60,82 @@ entriesRoutes.get("/entries/new/:type", (c) => {
   )
 })
 
-// Form submissions
-entriesRoutes.post("/entries/new/food", async (c) => {
+// Meal submission
+entriesRoutes.post("/entries/new/meal", async (c) => {
   const dog = getDefaultDog()
   const body = await c.req.parseBody()
 
+  const foodId = body.food_id as string
+  const food = getFood(foodId)
+  if (!food) return c.text("Food not found", 400)
+
+  const quantity = parseFloat(body.quantity as string)
+  const calories =
+    food.calories_per_unit != null ? Math.round(quantity * food.calories_per_unit) : null
+
   createFoodEntry({
     dog_id: dog.id,
-    food_name: body.food_name as string,
-    brand: (body.brand as string) || undefined,
-    food_type: (body.food_type as FoodType) || undefined,
-    amount: (body.amount as string) || undefined,
+    food_id: foodId,
+    food_name: food.name,
+    brand: food.brand ?? undefined,
+    entry_kind: "meal",
+    quantity,
+    unit: food.unit,
+    calories: calories ?? undefined,
     meal_time: (body.meal_time as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
+  const calStr = calories != null ? ` (${calories} cal)` : ""
   return c.html(
     <div class="alert alert-success">
-      Logged <strong>{body.food_name as string}</strong>. <a href="/?type=food">View food log</a> or{" "}
-      <a href="/entries/new/food">log another</a>.
+      Logged {quantity} {food.unit} of <strong>{food.name}</strong>
+      {calStr}. <a href="/">Dashboard</a> or <a href="/entries/new/meal">log another</a>.
+    </div>
+  )
+})
+
+// Treat submission
+entriesRoutes.post("/entries/new/treat", async (c) => {
+  const dog = getDefaultDog()
+  const body = await c.req.parseBody()
+
+  const foodId = (body.food_id as string) || undefined
+  const quantity = body.quantity ? parseFloat(body.quantity as string) : 1
+
+  let foodName: string
+  let unit: string | undefined
+  let calories: number | undefined
+
+  if (foodId) {
+    const food = getFood(foodId)
+    if (!food) return c.text("Food not found", 400)
+    foodName = food.name
+    unit = food.unit
+    if (food.calories_per_unit != null) {
+      calories = Math.round(quantity * food.calories_per_unit)
+    }
+  } else {
+    foodName = (body.food_name as string) || "Treat"
+  }
+
+  createFoodEntry({
+    dog_id: dog.id,
+    food_id: foodId,
+    food_name: foodName,
+    entry_kind: "treat",
+    quantity,
+    unit,
+    calories,
+    meal_time: (body.meal_time as string) || undefined,
+    notes: (body.notes as string) || undefined,
+  })
+
+  const calStr = calories != null ? ` (${calories} cal)` : ""
+  return c.html(
+    <div class="alert alert-success">
+      Logged {quantity} x <strong>{foodName}</strong>
+      {calStr}. <a href="/">Dashboard</a> or <a href="/entries/new/treat">log another</a>.
     </div>
   )
 })
@@ -92,8 +158,8 @@ entriesRoutes.post("/entries/new/bowel", async (c) => {
 
   return c.html(
     <div class="alert alert-success">
-      Logged bowel movement (consistency: {entry.consistency}/7).{" "}
-      <a href="/?type=bowel">View bowel log</a> or <a href="/entries/new/bowel">log another</a>.
+      Logged bowel movement (consistency: {entry.consistency}/7). <a href="/">Dashboard</a> or{" "}
+      <a href="/entries/new/bowel">log another</a>.
     </div>
   )
 })
@@ -112,8 +178,8 @@ entriesRoutes.post("/entries/new/health", async (c) => {
 
   return c.html(
     <div class="alert alert-success">
-      Logged {entry.entry_type} (severity: {entry.severity}/5).{" "}
-      <a href="/?type=health">View health log</a> or <a href="/entries/new/health">log another</a>.
+      Logged {entry.entry_type} (severity: {entry.severity}/5). <a href="/">Dashboard</a> or{" "}
+      <a href="/entries/new/health">log another</a>.
     </div>
   )
 })

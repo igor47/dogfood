@@ -36,8 +36,15 @@ export const Layout = ({ children, title = "Dogfood" }: LayoutProps) => {
               <i class="bi bi-heart-pulse me-1"></i>
               Dogfood
             </a>
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="/foods">
+                  Foods
+                </a>
+              </li>
+            </ul>
             <div class="d-flex gap-2 ms-auto">
-              <a href="/entries/new/food" class="btn btn-sm btn-outline-success">
+              <a href="/entries/new/meal" class="btn btn-sm btn-outline-success">
                 <i class="bi bi-plus-lg"></i> Log
               </a>
             </div>
