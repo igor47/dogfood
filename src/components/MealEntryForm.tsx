@@ -1,12 +1,18 @@
+import type { FoodEntry } from "@src/db/food-entries"
 import type { Food } from "@src/db/foods"
+import { toLocalInputValue } from "@src/lib/dates"
 
 interface MealEntryFormProps {
   foods: Food[]
+  entry?: FoodEntry
 }
 
-export const MealEntryForm = ({ foods }: MealEntryFormProps) => {
+export const MealEntryForm = ({ foods, entry }: MealEntryFormProps) => {
+  const action = entry ? `/entries/meal/${entry.id}/edit` : "/entries/new/meal"
+  const submitLabel = entry ? "Save" : "Log Meal"
+
   return (
-    <form hx-post="/entries/new/meal" hx-target="#form-result" hx-swap="innerHTML">
+    <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
       {foods.length === 0 ? (
         <div class="alert alert-warning">
           No meal foods defined yet. <a href="/foods/new?category=meal">Add a food first</a>.
@@ -20,7 +26,12 @@ export const MealEntryForm = ({ foods }: MealEntryFormProps) => {
             <select class="form-select" id="food_id" name="food_id" required>
               <option value="">-- select food --</option>
               {foods.map((f) => (
-                <option value={f.id} data-unit={f.unit} data-cal={f.calories_per_unit ?? ""}>
+                <option
+                  value={f.id}
+                  selected={entry?.food_id === f.id}
+                  data-unit={f.unit}
+                  data-cal={f.calories_per_unit ?? ""}
+                >
                   {f.name}
                   {f.brand && ` (${f.brand})`} — per {f.unit}
                   {f.calories_per_unit != null && `, ${f.calories_per_unit} cal`}
@@ -40,6 +51,7 @@ export const MealEntryForm = ({ foods }: MealEntryFormProps) => {
                 class="form-control"
                 id="quantity"
                 name="quantity"
+                value={entry?.quantity ?? ""}
                 required
               />
             </div>
@@ -47,7 +59,13 @@ export const MealEntryForm = ({ foods }: MealEntryFormProps) => {
               <label for="meal_time" class="form-label">
                 When
               </label>
-              <input type="datetime-local" class="form-control" id="meal_time" name="meal_time" />
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="meal_time"
+                name="meal_time"
+                value={entry ? toLocalInputValue(entry.meal_time) : ""}
+              />
             </div>
           </div>
 
@@ -55,12 +73,31 @@ export const MealEntryForm = ({ foods }: MealEntryFormProps) => {
             <label for="notes" class="form-label">
               Notes
             </label>
-            <textarea class="form-control" id="notes" name="notes" rows={2}></textarea>
+            <textarea class="form-control" id="notes" name="notes" rows={2}>
+              {entry?.notes ?? ""}
+            </textarea>
           </div>
 
           <button type="submit" class="btn btn-success">
-            <i class="bi bi-plus-lg"></i> Log Meal
+            {submitLabel}
           </button>
+          {entry && (
+            <>
+              <a href="/" class="btn btn-outline-secondary ms-2">
+                Cancel
+              </a>
+              <button
+                type="button"
+                hx-delete={`/entries/food/${entry.id}`}
+                hx-confirm="Delete this entry?"
+                hx-target="#form-result"
+                hx-swap="innerHTML"
+                class="btn btn-outline-danger ms-2"
+              >
+                Delete
+              </button>
+            </>
+          )}
         </>
       )}
     </form>

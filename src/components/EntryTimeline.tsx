@@ -1,6 +1,13 @@
 import { Timestamp } from "@src/components/Timestamp"
 import type { TimelineEntry } from "@src/db/entries"
 
+function editUrl(entry: TimelineEntry): string {
+  if (entry.entry_type === "food") {
+    return `/entries/${entry.entry_kind === "treat" ? "treat" : "meal"}/${entry.id}/edit`
+  }
+  return `/entries/${entry.entry_type}/${entry.id}/edit`
+}
+
 function entryIcon(type: string): string {
   switch (type) {
     case "food":
@@ -86,7 +93,10 @@ export const EntryTimeline = ({ entries, showTypeFilter, currentType }: EntryTim
       ) : (
         <div class="list-group">
           {entries.map((entry) => (
-            <div class="list-group-item d-flex align-items-center gap-3">
+            <a
+              href={editUrl(entry)}
+              class="list-group-item list-group-item-action d-flex align-items-center gap-3"
+            >
               <span class={`badge rounded-pill ${entryBadgeClass(entry.entry_type)}`}>
                 <i class={`bi ${entryIcon(entry.entry_type)}`}></i>
               </span>
@@ -96,7 +106,8 @@ export const EntryTimeline = ({ entries, showTypeFilter, currentType }: EntryTim
                   <Timestamp datetime={entry.occurred_at} />
                 </small>
               </div>
-            </div>
+              <i class="bi bi-pencil text-muted"></i>
+            </a>
           ))}
         </div>
       )}

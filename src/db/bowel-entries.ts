@@ -93,6 +93,63 @@ export function listBowelEntries(dogId: string, limit = 50): BowelEntry[] {
     .all(dogId, limit) as BowelEntry[]
 }
 
+export function updateBowelEntry(
+  id: string,
+  data: {
+    consistency?: Consistency
+    color?: BowelColor
+    has_blood?: boolean
+    has_mucus?: boolean
+    straining?: boolean
+    urgency?: Urgency
+    occurred_at?: string
+    notes?: string
+  }
+): BowelEntry | null {
+  const db = getDb()
+  const fields: string[] = []
+  const values: (string | number | null)[] = []
+
+  if (data.consistency !== undefined) {
+    fields.push("consistency = ?")
+    values.push(data.consistency)
+  }
+  if (data.color !== undefined) {
+    fields.push("color = ?")
+    values.push(data.color)
+  }
+  if (data.has_blood !== undefined) {
+    fields.push("has_blood = ?")
+    values.push(data.has_blood ? 1 : 0)
+  }
+  if (data.has_mucus !== undefined) {
+    fields.push("has_mucus = ?")
+    values.push(data.has_mucus ? 1 : 0)
+  }
+  if (data.straining !== undefined) {
+    fields.push("straining = ?")
+    values.push(data.straining ? 1 : 0)
+  }
+  if (data.urgency !== undefined) {
+    fields.push("urgency = ?")
+    values.push(data.urgency)
+  }
+  if (data.occurred_at !== undefined) {
+    fields.push("occurred_at = ?")
+    values.push(toUtcSqlite(data.occurred_at))
+  }
+  if (data.notes !== undefined) {
+    fields.push("notes = ?")
+    values.push(data.notes || null)
+  }
+
+  if (fields.length === 0) return getBowelEntry(id)
+
+  values.push(id)
+  db.run(`UPDATE bowel_entries SET ${fields.join(", ")} WHERE id = ?`, values)
+  return getBowelEntry(id)
+}
+
 export function deleteBowelEntry(id: string): void {
   const db = getDb()
   db.run("DELETE FROM bowel_entries WHERE id = ?", [id])

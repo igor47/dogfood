@@ -4,6 +4,7 @@ export interface TimelineEntry {
   id: string
   dog_id: string
   entry_type: "food" | "bowel" | "health"
+  entry_kind: string | null
   summary: string
   occurred_at: string
   created_at: string
@@ -20,7 +21,7 @@ export function listRecentEntries(
 
   if (type === "all" || type === "food") {
     parts.push(`
-      SELECT food_entries.id, food_entries.dog_id, 'food' AS entry_type,
+      SELECT food_entries.id, food_entries.dog_id, 'food' AS entry_type, food_entries.entry_kind,
         food_entries.entry_kind || ': ' || food_entries.food_name ||
         COALESCE(' — ' || food_entries.quantity || ' ' || food_entries.unit, '') ||
         COALESCE(' (' || CAST(food_entries.quantity * foods.calories_per_unit AS INTEGER) || ' cal)', '') AS summary,
@@ -33,7 +34,7 @@ export function listRecentEntries(
 
   if (type === "all" || type === "bowel") {
     parts.push(`
-      SELECT id, dog_id, 'bowel' AS entry_type,
+      SELECT id, dog_id, 'bowel' AS entry_type, NULL AS entry_kind,
         'Bowel movement (consistency: ' || consistency || '/7)' AS summary,
         occurred_at, created_at
       FROM bowel_entries WHERE dog_id = ?
@@ -42,7 +43,7 @@ export function listRecentEntries(
 
   if (type === "all" || type === "health") {
     parts.push(`
-      SELECT id, dog_id, 'health' AS entry_type,
+      SELECT id, dog_id, 'health' AS entry_type, NULL AS entry_kind,
         entry_type || ' (severity: ' || severity || '/5)' AS summary,
         occurred_at, created_at
       FROM health_entries WHERE dog_id = ?

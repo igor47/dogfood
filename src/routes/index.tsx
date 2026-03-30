@@ -18,6 +18,7 @@ indexRoutes.get("/timeline", (c) => {
 
 indexRoutes.get("/", (c) => {
   const dog = getDefaultDog()
+  const saved = c.req.query("saved") === "1"
   const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
   const timelineEntries = listRecentEntries(dog.id, 50, type)
   const todaysFood = listFoodEntries(dog.id, 10)
@@ -27,6 +28,12 @@ indexRoutes.get("/", (c) => {
 
   return c.render(
     <div>
+      {saved && (
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          Entry saved successfully.
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      )}
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1>{dog.name}</h1>

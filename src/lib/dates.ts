@@ -59,6 +59,16 @@ export function formatDatetime(dateStr: string): string {
 }
 
 /**
+ * Convert a UTC SQLite datetime to a value for <input type="datetime-local"> in DISPLAY_TZ.
+ * Returns "YYYY-MM-DDTHH:MM" format.
+ */
+export function toLocalInputValue(dateStr: string): string {
+  const dt = fromSqlite(dateStr)
+  if (!dt.isValid) return ""
+  return dt.toFormat("yyyy-MM-dd'T'HH:mm")
+}
+
+/**
  * Format a SQLite datetime as time only: "5:00 PM"
  */
 export function formatTime(dateStr: string): string {

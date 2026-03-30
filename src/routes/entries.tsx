@@ -1,10 +1,25 @@
 import type { BowelColor, Consistency, Urgency } from "@src/db/bowel-entries"
-import { createBowelEntry } from "@src/db/bowel-entries"
+import {
+  createBowelEntry,
+  deleteBowelEntry,
+  getBowelEntry,
+  updateBowelEntry,
+} from "@src/db/bowel-entries"
 import { getDefaultDog, updateDog } from "@src/db/dogs"
-import { createFoodEntry } from "@src/db/food-entries"
+import {
+  createFoodEntry,
+  deleteFoodEntry,
+  getFoodEntry,
+  updateFoodEntry,
+} from "@src/db/food-entries"
 import { getFood, listFoods } from "@src/db/foods"
 import type { HealthEntryType, Severity } from "@src/db/health-entries"
-import { createHealthEntry } from "@src/db/health-entries"
+import {
+  createHealthEntry,
+  deleteHealthEntry,
+  getHealthEntry,
+  updateHealthEntry,
+} from "@src/db/health-entries"
 import { Hono } from "hono"
 import type { HtmlEscapedString } from "hono/utils/html"
 import { BowelEntryForm } from "../components/BowelEntryForm"
@@ -172,6 +187,178 @@ entriesRoutes.post("/entries/new/health", async (c) => {
       <a href="/entries/new/health">log another</a>.
     </div>
   )
+})
+
+// Edit entry routes
+entriesRoutes.get("/entries/meal/:id/edit", (c) => {
+  const entry = getFoodEntry(c.req.param("id"))
+  if (!entry) return c.text("Not found", 404)
+  const foods = listFoods("meal")
+  return c.render(
+    <div>
+      <h2>Edit Meal</h2>
+      <div class="row">
+        <div class="col-md-8">
+          <MealEntryForm foods={foods} entry={entry} />
+          <div id="form-result" class="mt-3"></div>
+        </div>
+      </div>
+    </div>,
+    { title: "Dogfood — Edit Meal" }
+  )
+})
+
+entriesRoutes.post("/entries/meal/:id/edit", async (c) => {
+  const id = c.req.param("id")
+  const body = await c.req.parseBody()
+  const food = getFood(body.food_id as string)
+  if (!food) return c.text("Food not found", 400)
+
+  updateFoodEntry(id, {
+    food_id: body.food_id as string,
+    food_name: food.name,
+    quantity: parseFloat(body.quantity as string),
+    unit: food.unit,
+    meal_time: (body.meal_time as string) || undefined,
+    notes: (body.notes as string) || undefined,
+  })
+
+  c.header("HX-Redirect", "/?saved=1")
+  return c.body(null, 200)
+})
+
+entriesRoutes.get("/entries/treat/:id/edit", (c) => {
+  const entry = getFoodEntry(c.req.param("id"))
+  if (!entry) return c.text("Not found", 404)
+  const foods = listFoods("treat")
+  return c.render(
+    <div>
+      <h2>Edit Treat</h2>
+      <div class="row">
+        <div class="col-md-8">
+          <TreatEntryForm foods={foods} entry={entry} />
+          <div id="form-result" class="mt-3"></div>
+        </div>
+      </div>
+    </div>,
+    { title: "Dogfood — Edit Treat" }
+  )
+})
+
+entriesRoutes.post("/entries/treat/:id/edit", async (c) => {
+  const id = c.req.param("id")
+  const body = await c.req.parseBody()
+  const foodId = (body.food_id as string) || undefined
+
+  let foodName: string
+  let unit: string | undefined
+
+  if (foodId) {
+    const food = getFood(foodId)
+    if (!food) return c.text("Food not found", 400)
+    foodName = food.name
+    unit = food.unit
+  } else {
+    foodName = (body.food_name as string) || "Treat"
+  }
+
+  updateFoodEntry(id, {
+    food_id: foodId,
+    food_name: foodName,
+    quantity: body.quantity ? parseFloat(body.quantity as string) : undefined,
+    unit,
+    meal_time: (body.meal_time as string) || undefined,
+    notes: (body.notes as string) || undefined,
+  })
+
+  c.header("HX-Redirect", "/?saved=1")
+  return c.body(null, 200)
+})
+
+entriesRoutes.delete("/entries/food/:id", (c) => {
+  deleteFoodEntry(c.req.param("id"))
+  c.header("HX-Redirect", "/?saved=1")
+  return c.body(null, 200)
+})
+
+entriesRoutes.get("/entries/bowel/:id/edit", (c) => {
+  const entry = getBowelEntry(c.req.param("id"))
+  if (!entry) return c.text("Not found", 404)
+  return c.render(
+    <div>
+      <h2>Edit Bowel Movement</h2>
+      <div class="row">
+        <div class="col-md-8">
+          <BowelEntryForm entry={entry} />
+          <div id="form-result" class="mt-3"></div>
+        </div>
+      </div>
+    </div>,
+    { title: "Dogfood — Edit Bowel Movement" }
+  )
+})
+
+entriesRoutes.post("/entries/bowel/:id/edit", async (c) => {
+  const id = c.req.param("id")
+  const body = await c.req.parseBody()
+
+  updateBowelEntry(id, {
+    consistency: parseInt(body.consistency as string, 10) as Consistency,
+    color: (body.color as BowelColor) || undefined,
+    has_blood: body.has_blood === "on",
+    has_mucus: body.has_mucus === "on",
+    straining: body.straining === "on",
+    urgency: body.urgency ? (parseInt(body.urgency as string, 10) as Urgency) : undefined,
+    occurred_at: (body.occurred_at as string) || undefined,
+    notes: (body.notes as string) || undefined,
+  })
+
+  c.header("HX-Redirect", "/?saved=1")
+  return c.body(null, 200)
+})
+
+entriesRoutes.delete("/entries/bowel/:id", (c) => {
+  deleteBowelEntry(c.req.param("id"))
+  c.header("HX-Redirect", "/?saved=1")
+  return c.body(null, 200)
+})
+
+entriesRoutes.get("/entries/health/:id/edit", (c) => {
+  const entry = getHealthEntry(c.req.param("id"))
+  if (!entry) return c.text("Not found", 404)
+  return c.render(
+    <div>
+      <h2>Edit Health Observation</h2>
+      <div class="row">
+        <div class="col-md-8">
+          <HealthEntryForm entry={entry} />
+          <div id="form-result" class="mt-3"></div>
+        </div>
+      </div>
+    </div>,
+    { title: "Dogfood — Edit Health Observation" }
+  )
+})
+
+entriesRoutes.post("/entries/health/:id/edit", async (c) => {
+  const id = c.req.param("id")
+  const body = await c.req.parseBody()
+
+  updateHealthEntry(id, {
+    entry_type: body.entry_type as HealthEntryType,
+    severity: body.severity ? (parseInt(body.severity as string, 10) as Severity) : undefined,
+    occurred_at: (body.occurred_at as string) || undefined,
+    notes: (body.notes as string) || undefined,
+  })
+
+  c.header("HX-Redirect", "/?saved=1")
+  return c.body(null, 200)
+})
+
+entriesRoutes.delete("/entries/health/:id", (c) => {
+  deleteHealthEntry(c.req.param("id"))
+  c.header("HX-Redirect", "/?saved=1")
+  return c.body(null, 200)
 })
 
 // Dog profile edit

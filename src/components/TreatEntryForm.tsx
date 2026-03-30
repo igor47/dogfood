@@ -1,12 +1,18 @@
+import type { FoodEntry } from "@src/db/food-entries"
 import type { Food } from "@src/db/foods"
+import { toLocalInputValue } from "@src/lib/dates"
 
 interface TreatEntryFormProps {
   foods: Food[]
+  entry?: FoodEntry
 }
 
-export const TreatEntryForm = ({ foods }: TreatEntryFormProps) => {
+export const TreatEntryForm = ({ foods, entry }: TreatEntryFormProps) => {
+  const action = entry ? `/entries/treat/${entry.id}/edit` : "/entries/new/treat"
+  const submitLabel = entry ? "Save" : "Log Treat"
+
   return (
-    <form hx-post="/entries/new/treat" hx-target="#form-result" hx-swap="innerHTML">
+    <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
       <div class="mb-3">
         <label for="food_id" class="form-label">
           Treat
@@ -14,7 +20,7 @@ export const TreatEntryForm = ({ foods }: TreatEntryFormProps) => {
         <select class="form-select" id="food_id" name="food_id">
           <option value="">-- free-form (enter below) --</option>
           {foods.map((f) => (
-            <option value={f.id}>
+            <option value={f.id} selected={entry?.food_id === f.id}>
               {f.name}
               {f.brand && ` (${f.brand})`} — per {f.unit}
               {f.calories_per_unit != null && `, ${f.calories_per_unit} cal`}
@@ -28,7 +34,13 @@ export const TreatEntryForm = ({ foods }: TreatEntryFormProps) => {
           <label for="food_name" class="form-label">
             Name (if free-form)
           </label>
-          <input type="text" class="form-control" id="food_name" name="food_name" />
+          <input
+            type="text"
+            class="form-control"
+            id="food_name"
+            name="food_name"
+            value={entry && !entry.food_id ? entry.food_name : ""}
+          />
         </div>
         <div class="col-md-6">
           <label for="quantity" class="form-label">
@@ -40,7 +52,7 @@ export const TreatEntryForm = ({ foods }: TreatEntryFormProps) => {
             class="form-control"
             id="quantity"
             name="quantity"
-            value="1"
+            value={entry?.quantity ?? "1"}
           />
         </div>
       </div>
@@ -50,7 +62,13 @@ export const TreatEntryForm = ({ foods }: TreatEntryFormProps) => {
           <label for="meal_time" class="form-label">
             When
           </label>
-          <input type="datetime-local" class="form-control" id="meal_time" name="meal_time" />
+          <input
+            type="datetime-local"
+            class="form-control"
+            id="meal_time"
+            name="meal_time"
+            value={entry ? toLocalInputValue(entry.meal_time) : ""}
+          />
         </div>
       </div>
 
@@ -58,12 +76,31 @@ export const TreatEntryForm = ({ foods }: TreatEntryFormProps) => {
         <label for="notes" class="form-label">
           Notes
         </label>
-        <textarea class="form-control" id="notes" name="notes" rows={2}></textarea>
+        <textarea class="form-control" id="notes" name="notes" rows={2}>
+          {entry?.notes ?? ""}
+        </textarea>
       </div>
 
       <button type="submit" class="btn btn-success">
-        <i class="bi bi-plus-lg"></i> Log Treat
+        {submitLabel}
       </button>
+      {entry && (
+        <>
+          <a href="/" class="btn btn-outline-secondary ms-2">
+            Cancel
+          </a>
+          <button
+            type="button"
+            hx-delete={`/entries/food/${entry.id}`}
+            hx-confirm="Delete this entry?"
+            hx-target="#form-result"
+            hx-swap="innerHTML"
+            class="btn btn-outline-danger ms-2"
+          >
+            Delete
+          </button>
+        </>
+      )}
     </form>
   )
 }

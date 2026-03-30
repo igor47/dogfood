@@ -90,6 +90,58 @@ export function listFoodEntries(dogId: string, limit = 50, kind?: EntryKind): Fo
     .all(dogId, limit) as FoodEntry[]
 }
 
+export function updateFoodEntry(
+  id: string,
+  data: {
+    food_id?: string
+    food_name?: string
+    entry_kind?: EntryKind
+    quantity?: number
+    unit?: string
+    meal_time?: string
+    notes?: string
+  }
+): FoodEntry | null {
+  const db = getDb()
+  const fields: string[] = []
+  const values: (string | number | null)[] = []
+
+  if (data.food_id !== undefined) {
+    fields.push("food_id = ?")
+    values.push(data.food_id)
+  }
+  if (data.food_name !== undefined) {
+    fields.push("food_name = ?")
+    values.push(data.food_name)
+  }
+  if (data.entry_kind !== undefined) {
+    fields.push("entry_kind = ?")
+    values.push(data.entry_kind)
+  }
+  if (data.quantity !== undefined) {
+    fields.push("quantity = ?")
+    values.push(data.quantity)
+  }
+  if (data.unit !== undefined) {
+    fields.push("unit = ?")
+    values.push(data.unit)
+  }
+  if (data.meal_time !== undefined) {
+    fields.push("meal_time = ?")
+    values.push(toUtcSqlite(data.meal_time))
+  }
+  if (data.notes !== undefined) {
+    fields.push("notes = ?")
+    values.push(data.notes || null)
+  }
+
+  if (fields.length === 0) return getFoodEntry(id)
+
+  values.push(id)
+  db.run(`UPDATE food_entries SET ${fields.join(", ")} WHERE id = ?`, values)
+  return getFoodEntry(id)
+}
+
 export function deleteFoodEntry(id: string): void {
   const db = getDb()
   db.run("DELETE FROM food_entries WHERE id = ?", [id])

@@ -74,6 +74,43 @@ export function listHealthEntries(dogId: string, limit = 50): HealthEntry[] {
     .all(dogId, limit) as HealthEntry[]
 }
 
+export function updateHealthEntry(
+  id: string,
+  data: {
+    entry_type?: HealthEntryType
+    severity?: Severity
+    occurred_at?: string
+    notes?: string
+  }
+): HealthEntry | null {
+  const db = getDb()
+  const fields: string[] = []
+  const values: (string | number | null)[] = []
+
+  if (data.entry_type !== undefined) {
+    fields.push("entry_type = ?")
+    values.push(data.entry_type)
+  }
+  if (data.severity !== undefined) {
+    fields.push("severity = ?")
+    values.push(data.severity)
+  }
+  if (data.occurred_at !== undefined) {
+    fields.push("occurred_at = ?")
+    values.push(toUtcSqlite(data.occurred_at))
+  }
+  if (data.notes !== undefined) {
+    fields.push("notes = ?")
+    values.push(data.notes || null)
+  }
+
+  if (fields.length === 0) return getHealthEntry(id)
+
+  values.push(id)
+  db.run(`UPDATE health_entries SET ${fields.join(", ")} WHERE id = ?`, values)
+  return getHealthEntry(id)
+}
+
 export function deleteHealthEntry(id: string): void {
   const db = getDb()
   db.run("DELETE FROM health_entries WHERE id = ?", [id])
