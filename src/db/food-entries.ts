@@ -74,20 +74,33 @@ export function getFoodEntry(id: string): FoodEntry | null {
   return db.query(`${FOOD_ENTRY_SELECT} WHERE food_entries.id = ?`).get(id) as FoodEntry | null
 }
 
-export function listFoodEntries(dogId: string, limit = 50, kind?: EntryKind): FoodEntry[] {
+export function listFoodEntries(
+  dogId: string,
+  opts?: { limit?: number; kind?: EntryKind; after?: string; before?: string }
+): FoodEntry[] {
   const db = getDb()
-  if (kind) {
-    return db
-      .query(
-        `${FOOD_ENTRY_SELECT} WHERE food_entries.dog_id = ? AND food_entries.entry_kind = ? ORDER BY food_entries.meal_time DESC LIMIT ?`
-      )
-      .all(dogId, kind, limit) as FoodEntry[]
+  const conditions = ["food_entries.dog_id = ?"]
+  const params: (string | number)[] = [dogId]
+
+  if (opts?.kind) {
+    conditions.push("food_entries.entry_kind = ?")
+    params.push(opts.kind)
   }
+  if (opts?.after) {
+    conditions.push("food_entries.meal_time >= ?")
+    params.push(opts.after)
+  }
+  if (opts?.before) {
+    conditions.push("food_entries.meal_time <= ?")
+    params.push(opts.before)
+  }
+
+  params.push(opts?.limit ?? 50)
   return db
     .query(
-      `${FOOD_ENTRY_SELECT} WHERE food_entries.dog_id = ? ORDER BY food_entries.meal_time DESC LIMIT ?`
+      `${FOOD_ENTRY_SELECT} WHERE ${conditions.join(" AND ")} ORDER BY food_entries.meal_time DESC LIMIT ?`
     )
-    .all(dogId, limit) as FoodEntry[]
+    .all(...params) as FoodEntry[]
 }
 
 export function updateFoodEntry(

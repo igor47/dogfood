@@ -69,6 +69,16 @@ export function toLocalInputValue(dateStr: string): string {
 }
 
 /**
+ * Get today's start and end as UTC SQLite datetime strings, based on DISPLAY_TZ.
+ */
+export function todayUtcRange(): { start: string; end: string } {
+  const now = DateTime.now().setZone(config.displayTz)
+  const start = now.startOf("day").toUTC().toFormat("yyyy-MM-dd HH:mm:ss")
+  const end = now.endOf("day").toUTC().toFormat("yyyy-MM-dd HH:mm:ss")
+  return { start, end }
+}
+
+/**
  * Format a SQLite datetime as time only: "5:00 PM"
  */
 export function formatTime(dateStr: string): string {

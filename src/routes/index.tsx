@@ -4,6 +4,7 @@ import { CONSISTENCY_SCALE, listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog } from "@src/db/dogs"
 import { listRecentEntries } from "@src/db/entries"
 import { listFoodEntries } from "@src/db/food-entries"
+import { todayUtcRange } from "@src/lib/dates"
 import { Hono } from "hono"
 
 export const indexRoutes = new Hono()
@@ -21,7 +22,8 @@ indexRoutes.get("/", (c) => {
   const saved = c.req.query("saved") === "1"
   const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
   const timelineEntries = listRecentEntries(dog.id, 50, type)
-  const todaysFood = listFoodEntries(dog.id, 10)
+  const today = todayUtcRange()
+  const todaysFood = listFoodEntries(dog.id, { after: today.start, before: today.end })
   const todaysTotalCal = todaysFood.reduce((sum, f) => sum + (f.calories ?? 0), 0)
   const recentBowel = listBowelEntries(dog.id, 1)
   const lastBowel = recentBowel[0]
@@ -48,7 +50,7 @@ indexRoutes.get("/", (c) => {
         <div class="col-md-4">
           <div class="card">
             <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">Today's Food</h6>
+              <h4 class="card-subtitle mb-2 text-muted">Today's Food</h4>
               {todaysFood.length === 0 ? (
                 <p class="card-text text-muted">Nothing logged yet</p>
               ) : (
@@ -83,7 +85,7 @@ indexRoutes.get("/", (c) => {
         <div class="col-md-4">
           <div class="card">
             <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">Last Bowel Movement</h6>
+              <h4 class="card-subtitle mb-2 text-muted">Last Bowel Movement</h4>
               {!lastBowel ? (
                 <p class="card-text text-muted">None logged</p>
               ) : (
@@ -107,7 +109,7 @@ indexRoutes.get("/", (c) => {
         <div class="col-md-4">
           <div class="card">
             <div class="card-body">
-              <h6 class="card-subtitle mb-2 text-muted">Quick Log</h6>
+              <h4 class="card-subtitle mb-2 text-muted">Quick Log</h4>
               <div class="d-flex flex-column gap-2">
                 <a href="/entries/new/meal" class="btn btn-sm btn-outline-success">
                   <i class="bi bi-egg-fried"></i> Meal
