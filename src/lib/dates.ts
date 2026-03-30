@@ -4,21 +4,24 @@ import { DateTime } from "luxon"
 /**
  * Parse any date string and return UTC SQLite datetime format (YYYY-MM-DD HH:MM:SS).
  * Accepts ISO 8601 with or without timezone offsets, SQL format, etc.
- * If no timezone is specified, assumes UTC.
+ * If no timezone is specified, assumes DISPLAY_TZ (for UI form inputs).
  * Returns null if the input is not a valid date.
  */
 export function toUtcSqlite(input: string): string | null {
-  // Try ISO first (handles offsets like "2026-03-28T05:00:00-07:00")
-  let dt = DateTime.fromISO(input, { zone: "utc" })
+  // Check if input has an explicit timezone offset (Z, +HH:MM, -HH:MM)
+  const hasOffset = /[Zz]$|[+-]\d{2}:\d{2}$/.test(input.trim())
+
+  // Try ISO first — use display timezone as default for naive inputs
+  let dt = DateTime.fromISO(input, { zone: hasOffset ? undefined : config.displayTz })
   if (!dt.isValid) {
-    // Try SQL format
-    dt = DateTime.fromSQL(input, { zone: "utc" })
+    // Try SQL format (always naive, so use display timezone)
+    dt = DateTime.fromSQL(input, { zone: config.displayTz })
   }
   if (!dt.isValid) {
     // Try JS Date as last resort
     const d = new Date(input)
     if (Number.isNaN(d.getTime())) return null
-    dt = DateTime.fromJSDate(d).toUTC()
+    dt = DateTime.fromJSDate(d)
   }
   return dt.toUTC().toFormat("yyyy-MM-dd HH:mm:ss")
 }

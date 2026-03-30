@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { config } from "@src/config"
 import { listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog, getDog } from "@src/db/dogs"
 import { listRecentEntries } from "@src/db/entries"
@@ -163,28 +164,58 @@ describe("computed calories", () => {
 })
 
 describe("date parsing", () => {
-  test("toUtcSqlite parses ISO 8601 with timezone offset", () => {
-    // This is the format claude.ai sends: "2026-03-28T05:00:00-07:00"
+  function withDisplayTz(tz: string, fn: () => void) {
+    const original = config.displayTz
+    ;(config as any).displayTz = tz
+    try {
+      fn()
+    } finally {
+      ;(config as any).displayTz = original
+    }
+  }
+
+  test("explicit offset: ISO with -07:00 converts to UTC", () => {
     const result = toUtcSqlite("2026-03-28T05:00:00-07:00")
     expect(result).toBe("2026-03-28 12:00:00")
   })
 
-  test("toUtcSqlite parses ISO 8601 with Z suffix", () => {
+  test("explicit offset: ISO with Z stays UTC", () => {
     const result = toUtcSqlite("2026-03-28T12:00:00Z")
     expect(result).toBe("2026-03-28 12:00:00")
   })
 
-  test("toUtcSqlite parses SQLite datetime format", () => {
-    const result = toUtcSqlite("2026-03-28 12:00:00")
-    expect(result).toBe("2026-03-28 12:00:00")
+  test("naive ISO with DISPLAY_TZ=UTC treats as UTC", () => {
+    withDisplayTz("UTC", () => {
+      const result = toUtcSqlite("2026-03-28T12:00:00")
+      expect(result).toBe("2026-03-28 12:00:00")
+    })
   })
 
-  test("toUtcSqlite parses ISO without timezone as UTC", () => {
-    const result = toUtcSqlite("2026-03-28T12:00:00")
-    expect(result).toBe("2026-03-28 12:00:00")
+  test("naive ISO with DISPLAY_TZ=America/Los_Angeles converts to UTC", () => {
+    withDisplayTz("America/Los_Angeles", () => {
+      // 4pm Pacific (PDT, UTC-7) = 11pm UTC
+      const result = toUtcSqlite("2026-03-28T16:00:00")
+      expect(result).toBe("2026-03-28 23:00:00")
+    })
   })
 
-  test("toUtcSqlite returns null for invalid input", () => {
+  test("naive SQL format with DISPLAY_TZ=America/New_York converts to UTC", () => {
+    withDisplayTz("America/New_York", () => {
+      // noon Eastern (EDT, UTC-4) = 4pm UTC
+      const result = toUtcSqlite("2026-03-28 12:00:00")
+      expect(result).toBe("2026-03-28 16:00:00")
+    })
+  })
+
+  test("explicit offset is respected regardless of DISPLAY_TZ", () => {
+    withDisplayTz("America/Los_Angeles", () => {
+      // Explicit +05:30 should not be affected by DISPLAY_TZ
+      const result = toUtcSqlite("2026-03-28T12:00:00+05:30")
+      expect(result).toBe("2026-03-28 06:30:00")
+    })
+  })
+
+  test("returns null for invalid input", () => {
     expect(toUtcSqlite("not a date")).toBeNull()
     expect(toUtcSqlite("")).toBeNull()
   })
@@ -194,7 +225,6 @@ describe("date parsing", () => {
     const entry = createTestFoodEntry(dog.id, {
       meal_time: "2026-03-28T17:00:00-07:00",
     })
-    // -07:00 offset means UTC is +7 hours = midnight UTC
     expect(entry.meal_time).toBe("2026-03-29 00:00:00")
   })
 
@@ -214,15 +244,9 @@ describe("date parsing", () => {
     expect(entry.occurred_at).toBe("2026-03-28 12:00:00")
   })
 
-  test("formatDatetime renders valid output for UTC SQLite dates", () => {
+  test("formatDatetime renders valid output", () => {
     const result = formatDatetime("2026-03-28 12:00:00")
     expect(result).not.toBe("Invalid Date")
-    // Should contain a time component
     expect(result).toMatch(/\d+:\d+/)
-  })
-
-  test("formatDatetime renders valid output for ISO with offset", () => {
-    const result = formatDatetime("2026-03-28T05:00:00-07:00")
-    expect(result).not.toBe("Invalid Date")
   })
 })
