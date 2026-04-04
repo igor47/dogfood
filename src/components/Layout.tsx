@@ -13,6 +13,14 @@ export const Layout = ({ children, title = "Dogfood" }: LayoutProps) => {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+        {/* Favicon */}
+        <link rel="icon" href="/static/favicon.ico" sizes="any" />
+        <link rel="icon" href="/static/favicon-32.png" type="image/png" sizes="32x32" />
+        <link rel="icon" href="/static/favicon-16.png" type="image/png" sizes="16x16" />
+        <link rel="icon" href="/static/favicon-192.png" type="image/png" sizes="192x192" />
+        <link rel="icon" href="/static/favicon-512.png" type="image/png" sizes="512x512" />
+        <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" />
+
         {/* Bootstrap */}
         <link
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
