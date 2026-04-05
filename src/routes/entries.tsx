@@ -27,7 +27,7 @@ async function processUploads(
   entryType: string,
   entryId: string,
   body: Record<string, string | File | (string | File)[]>
-): Promise<void> {
+): Promise<string[]> {
   // Collect all File values from the body (handles both single and array cases)
   const files: File[] = []
   for (const value of Object.values(body)) {
@@ -42,11 +42,16 @@ async function processUploads(
     }
   }
 
+  const errors: string[] = []
   for (const file of files) {
     const result = await saveUploadedFile(file)
-    if ("error" in result) continue
-    linkUploadToEntry(entryType, entryId, result.id)
+    if ("error" in result) {
+      errors.push(`${file.name}: ${result.error}`)
+    } else {
+      linkUploadToEntry(entryType, entryId, result.id)
+    }
   }
+  return errors
 }
 
 // New entry forms
@@ -112,12 +117,17 @@ entriesRoutes.post("/entries/new/meal", async (c) => {
 
   if ("error" in result) return c.text(result.error, 400)
 
-  await processUploads("food", result.entry.id, body)
+  const uploadErrors = await processUploads("food", result.entry.id, body)
 
   return c.html(
-    <div class="alert alert-success">
-      Logged {result.entry.quantity} {result.food.unit} of <strong>{result.food.name}</strong>.{" "}
-      <a href="/">Dashboard</a> or <a href="/entries/new/meal">log another</a>.
+    <div>
+      <div class="alert alert-success">
+        Logged {result.entry.quantity} {result.food.unit} of <strong>{result.food.name}</strong>.{" "}
+        <a href="/">Dashboard</a> or <a href="/entries/new/meal">log another</a>.
+      </div>
+      {uploadErrors.length > 0 && (
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      )}
     </div>
   )
 })
@@ -136,12 +146,17 @@ entriesRoutes.post("/entries/new/treat", async (c) => {
 
   if ("error" in result) return c.text(result.error, 400)
 
-  await processUploads("food", result.entry.id, body)
+  const uploadErrors = await processUploads("food", result.entry.id, body)
 
   return c.html(
-    <div class="alert alert-success">
-      Logged {result.entry.quantity} x <strong>{result.name}</strong>. <a href="/">Dashboard</a> or{" "}
-      <a href="/entries/new/treat">log another</a>.
+    <div>
+      <div class="alert alert-success">
+        Logged {result.entry.quantity} x <strong>{result.name}</strong>. <a href="/">Dashboard</a>{" "}
+        or <a href="/entries/new/treat">log another</a>.
+      </div>
+      {uploadErrors.length > 0 && (
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      )}
     </div>
   )
 })
@@ -160,12 +175,17 @@ entriesRoutes.post("/entries/new/bowel", async (c) => {
     notes: (body.notes as string) || undefined,
   })
 
-  await processUploads("bowel", entry.id, body)
+  const uploadErrors = await processUploads("bowel", entry.id, body)
 
   return c.html(
-    <div class="alert alert-success">
-      Logged bowel movement (consistency: {entry.consistency}/7). <a href="/">Dashboard</a> or{" "}
-      <a href="/entries/new/bowel">log another</a>.
+    <div>
+      <div class="alert alert-success">
+        Logged bowel movement (consistency: {entry.consistency}/7). <a href="/">Dashboard</a> or{" "}
+        <a href="/entries/new/bowel">log another</a>.
+      </div>
+      {uploadErrors.length > 0 && (
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      )}
     </div>
   )
 })
@@ -180,12 +200,17 @@ entriesRoutes.post("/entries/new/symptom", async (c) => {
     notes: (body.notes as string) || undefined,
   })
 
-  await processUploads("symptom", entry.id, body)
+  const uploadErrors = await processUploads("symptom", entry.id, body)
 
   return c.html(
-    <div class="alert alert-success">
-      Logged {entry.symptom_type} (severity: {entry.severity}/5). <a href="/">Dashboard</a> or{" "}
-      <a href="/entries/new/symptom">log another</a>.
+    <div>
+      <div class="alert alert-success">
+        Logged {entry.symptom_type} (severity: {entry.severity}/5). <a href="/">Dashboard</a> or{" "}
+        <a href="/entries/new/symptom">log another</a>.
+      </div>
+      {uploadErrors.length > 0 && (
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      )}
     </div>
   )
 })
@@ -202,15 +227,20 @@ entriesRoutes.post("/entries/new/event", async (c) => {
     medication_dose: (body.medication_dose as string) || undefined,
   })
 
-  await processUploads("event", entry.id, body)
+  const uploadErrors = await processUploads("event", entry.id, body)
 
   let detail = entry.event_type as string
   if (entry.medication_name) detail += ` — ${entry.medication_name}`
   if (entry.weight_kg != null) detail += ` — ${entry.weight_kg} kg`
 
   return c.html(
-    <div class="alert alert-success">
-      Logged {detail}. <a href="/">Dashboard</a> or <a href="/entries/new/event">log another</a>.
+    <div>
+      <div class="alert alert-success">
+        Logged {detail}. <a href="/">Dashboard</a> or <a href="/entries/new/event">log another</a>.
+      </div>
+      {uploadErrors.length > 0 && (
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      )}
     </div>
   )
 })
@@ -256,8 +286,16 @@ entriesRoutes.post("/entries/meal/:id/edit", async (c) => {
     notes: (body.notes as string) || undefined,
   })
 
-  await processUploads("food", id, body)
+  const uploadErrors = await processUploads("food", id, body)
 
+  if (uploadErrors.length > 0) {
+    return c.html(
+      <div>
+        <div class="alert alert-success">Entry saved.</div>
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      </div>
+    )
+  }
   c.header("HX-Redirect", "/?saved=1")
   return c.body(null, 200)
 })
@@ -307,8 +345,16 @@ entriesRoutes.post("/entries/treat/:id/edit", async (c) => {
     notes: (body.notes as string) || undefined,
   })
 
-  await processUploads("food", id, body)
+  const uploadErrors = await processUploads("food", id, body)
 
+  if (uploadErrors.length > 0) {
+    return c.html(
+      <div>
+        <div class="alert alert-success">Entry saved.</div>
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      </div>
+    )
+  }
   c.header("HX-Redirect", "/?saved=1")
   return c.body(null, 200)
 })
@@ -352,8 +398,16 @@ entriesRoutes.post("/entries/bowel/:id/edit", async (c) => {
     notes: (body.notes as string) || undefined,
   })
 
-  await processUploads("bowel", id, body)
+  const uploadErrors = await processUploads("bowel", id, body)
 
+  if (uploadErrors.length > 0) {
+    return c.html(
+      <div>
+        <div class="alert alert-success">Entry saved.</div>
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      </div>
+    )
+  }
   c.header("HX-Redirect", "/?saved=1")
   return c.body(null, 200)
 })
@@ -393,8 +447,16 @@ entriesRoutes.post("/entries/symptom/:id/edit", async (c) => {
     notes: (body.notes as string) || undefined,
   })
 
-  await processUploads("symptom", id, body)
+  const uploadErrors = await processUploads("symptom", id, body)
 
+  if (uploadErrors.length > 0) {
+    return c.html(
+      <div>
+        <div class="alert alert-success">Entry saved.</div>
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      </div>
+    )
+  }
   c.header("HX-Redirect", "/?saved=1")
   return c.body(null, 200)
 })
@@ -436,8 +498,16 @@ entriesRoutes.post("/entries/event/:id/edit", async (c) => {
     medication_dose: (body.medication_dose as string) || null,
   })
 
-  await processUploads("event", id, body)
+  const uploadErrors = await processUploads("event", id, body)
 
+  if (uploadErrors.length > 0) {
+    return c.html(
+      <div>
+        <div class="alert alert-success">Entry saved.</div>
+        <div class="alert alert-warning">Some attachments failed: {uploadErrors.join("; ")}</div>
+      </div>
+    )
+  }
   c.header("HX-Redirect", "/?saved=1")
   return c.body(null, 200)
 })

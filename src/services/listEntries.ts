@@ -29,8 +29,15 @@ export function listRecentEntries(dogId: string, opts: ListEntriesOpts = {}): Ti
   const parts: string[] = []
   const params: (string | number)[] = []
 
-  // If before is a bare date (no time), include the whole day
-  const beforeInclusive = before && !before.includes(" ") ? `${before} 23:59:59` : before
+  // If before is a bare date (no time), use < next day for full-day inclusion
+  let beforeBound = before
+  let beforeOp = "<="
+  if (before && !before.includes(" ")) {
+    const d = new Date(`${before}T00:00:00Z`)
+    d.setUTCDate(d.getUTCDate() + 1)
+    beforeBound = d.toISOString().slice(0, 10)
+    beforeOp = "<"
+  }
 
   function addPart(sql: string, dateCol: string, dogIdCol = "dog_id") {
     const clauses = [`${dogIdCol} = ?`]
@@ -39,9 +46,9 @@ export function listRecentEntries(dogId: string, opts: ListEntriesOpts = {}): Ti
       clauses.push(`${dateCol} >= ?`)
       params.push(after)
     }
-    if (beforeInclusive) {
-      clauses.push(`${dateCol} <= ?`)
-      params.push(beforeInclusive)
+    if (beforeBound) {
+      clauses.push(`${dateCol} ${beforeOp} ?`)
+      params.push(beforeBound)
     }
     parts.push(sql.replace("__WHERE__", clauses.join(" AND ")))
   }

@@ -16,6 +16,15 @@ indexRoutes.get("/timeline", (c) => {
   const after = c.req.query("after") || undefined
   const before = c.req.query("before") || undefined
   const entries = listRecentEntries(dog.id, { limit: 50, type, after, before })
+
+  // Build equivalent /?... URL for browser history
+  const params = new URLSearchParams()
+  if (type && type !== "all") params.set("type", type)
+  if (after) params.set("after", after)
+  if (before) params.set("before", before)
+  const pushUrl = params.size > 0 ? `/?${params}` : "/"
+  c.header("HX-Push-Url", pushUrl)
+
   return c.html(
     <EntryTimeline
       entries={entries}
