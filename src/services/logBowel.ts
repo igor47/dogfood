@@ -56,6 +56,11 @@ export function registerLogBowelTool(server: McpServer) {
           ),
         notes: z.string().optional(),
       },
+      outputSchema: {
+        entry_id: z.string().describe("ID of the created bowel entry"),
+        entry_type: z.literal("bowel"),
+        summary: z.string().describe("Human-readable summary of what was logged"),
+      },
     },
     async ({
       consistency,
@@ -78,12 +83,12 @@ export function registerLogBowelTool(server: McpServer) {
         notes,
       })
       return {
-        content: [
-          {
-            type: "text" as const,
-            text: `Logged bowel movement (consistency: ${entry.consistency}/7)`,
-          },
-        ],
+        content: [],
+        structuredContent: {
+          entry_id: entry.id,
+          entry_type: "bowel" as const,
+          summary: `Logged bowel movement (consistency: ${entry.consistency}/7)`,
+        },
       }
     }
   )

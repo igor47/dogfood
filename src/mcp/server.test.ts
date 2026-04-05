@@ -102,8 +102,10 @@ describe("MCP tools", () => {
       name: "log_meal",
       arguments: { food_id: food.id, quantity: 1.5 },
     })
-    const text = textContent(result)
-    expect(text).toContain("Logged meal: 1.5 cups of Premium Kibble (525 cal)")
+    const sc = result.structuredContent as Record<string, unknown>
+    expect(sc.entry_id).toBeTruthy()
+    expect(sc.entry_type).toBe("food")
+    expect(sc.summary).toContain("Premium Kibble (525 cal)")
 
     const entries = listFoodEntries(dog.id)
     expect(entries).toHaveLength(1)
@@ -119,6 +121,7 @@ describe("MCP tools", () => {
       name: "log_meal",
       arguments: { food_id: "nonexistent", quantity: 1 },
     })
+    expect(result.isError).toBe(true)
     expect(textContent(result)).toContain("Food not found")
   })
 
@@ -136,7 +139,9 @@ describe("MCP tools", () => {
       name: "log_treat",
       arguments: { food_id: food.id, quantity: 2 },
     })
-    expect(textContent(result)).toContain("Logged treat: 2 x Greenie (180 cal)")
+    const sc = result.structuredContent as Record<string, unknown>
+    expect(sc.entry_type).toBe("food")
+    expect(sc.summary).toContain("Greenie (180 cal)")
 
     const entries = listFoodEntries(dog.id)
     expect(entries).toHaveLength(1)
@@ -152,7 +157,8 @@ describe("MCP tools", () => {
       name: "log_treat",
       arguments: { food_name: "Piece of cheese" },
     })
-    expect(textContent(result)).toContain("Piece of cheese")
+    const sc = result.structuredContent as Record<string, unknown>
+    expect(sc.summary).toContain("Piece of cheese")
 
     const entries = listFoodEntries(dog.id)
     expect(entries).toHaveLength(1)
@@ -168,7 +174,10 @@ describe("MCP tools", () => {
       name: "log_bowel_movement",
       arguments: { consistency: 4, color: "brown", has_blood: false },
     })
-    expect(textContent(result)).toContain("consistency: 4/7")
+    const sc = result.structuredContent as Record<string, unknown>
+    expect(sc.entry_id).toBeTruthy()
+    expect(sc.entry_type).toBe("bowel")
+    expect(sc.summary).toContain("consistency: 4/7")
 
     const entries = listBowelEntries(dog.id)
     expect(entries).toHaveLength(1)
@@ -184,8 +193,11 @@ describe("MCP tools", () => {
       name: "log_symptom",
       arguments: { symptom_type: "vomiting", severity: 3, notes: "after breakfast" },
     })
-    expect(textContent(result)).toContain("vomiting")
-    expect(textContent(result)).toContain("severity: 3/5")
+    const sc = result.structuredContent as Record<string, unknown>
+    expect(sc.entry_id).toBeTruthy()
+    expect(sc.entry_type).toBe("symptom")
+    expect(sc.summary).toContain("vomiting")
+    expect(sc.summary).toContain("severity: 3/5")
 
     const entries = listSymptomEntries(dog.id)
     expect(entries).toHaveLength(1)
@@ -206,8 +218,11 @@ describe("MCP tools", () => {
         notes: "morning dose",
       },
     })
-    expect(textContent(result)).toContain("medication")
-    expect(textContent(result)).toContain("Apoquel")
+    const sc = result.structuredContent as Record<string, unknown>
+    expect(sc.entry_id).toBeTruthy()
+    expect(sc.entry_type).toBe("event")
+    expect(sc.summary).toContain("medication")
+    expect(sc.summary).toContain("Apoquel")
 
     const entries = listEventEntries(dog.id)
     expect(entries).toHaveLength(1)

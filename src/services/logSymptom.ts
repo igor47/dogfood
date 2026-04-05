@@ -60,6 +60,11 @@ export function registerLogSymptomTool(server: McpServer) {
           ),
         notes: z.string().optional(),
       },
+      outputSchema: {
+        entry_id: z.string().describe("ID of the created symptom entry"),
+        entry_type: z.literal("symptom"),
+        summary: z.string().describe("Human-readable summary of what was logged"),
+      },
     },
     async ({ symptom_type, severity, occurred_at, notes }) => {
       const entry = logSymptom({
@@ -69,12 +74,12 @@ export function registerLogSymptomTool(server: McpServer) {
         notes,
       })
       return {
-        content: [
-          {
-            type: "text" as const,
-            text: `Logged ${entry.symptom_type} (severity: ${entry.severity}/5)`,
-          },
-        ],
+        content: [],
+        structuredContent: {
+          entry_id: entry.id,
+          entry_type: "symptom" as const,
+          summary: `Logged ${entry.symptom_type} (severity: ${entry.severity}/5)`,
+        },
       }
     }
   )

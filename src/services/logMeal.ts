@@ -59,21 +59,29 @@ export function registerLogMealTool(server: McpServer) {
           ),
         notes: z.string().optional(),
       },
+      outputSchema: {
+        entry_id: z.string().describe("ID of the created food entry"),
+        entry_type: z.literal("food"),
+        summary: z.string().describe("Human-readable summary of what was logged"),
+      },
     },
     async ({ food_id, quantity, meal_time, notes }) => {
       const result = logMeal({ food_id, quantity, meal_time, notes })
       if ("error" in result) {
-        return { content: [{ type: "text" as const, text: result.error }] }
+        return {
+          content: [{ type: "text" as const, text: result.error }],
+          isError: true,
+        }
       }
 
       const calStr = result.calories != null ? ` (${result.calories} cal)` : ""
       return {
-        content: [
-          {
-            type: "text" as const,
-            text: `Logged meal: ${quantity} ${result.food.unit} of ${result.food.name}${calStr}`,
-          },
-        ],
+        content: [],
+        structuredContent: {
+          entry_id: result.entry.id,
+          entry_type: "food" as const,
+          summary: `Logged meal: ${quantity} ${result.food.unit} of ${result.food.name}${calStr}`,
+        },
       }
     }
   )

@@ -53,6 +53,11 @@ export function registerLogEventTool(server: McpServer) {
           .optional()
           .describe("Dosage of medication (for medication events)"),
       },
+      outputSchema: {
+        entry_id: z.string().describe("ID of the created event entry"),
+        entry_type: z.literal("event"),
+        summary: z.string().describe("Human-readable summary of what was logged"),
+      },
     },
     async ({ event_type, occurred_at, notes, weight_kg, medication_name, medication_dose }) => {
       const entry = logEvent({
@@ -64,13 +69,18 @@ export function registerLogEventTool(server: McpServer) {
         medication_dose,
       })
 
-      let text = `Logged ${entry.event_type}`
-      if (entry.medication_name) text += ` — ${entry.medication_name}`
-      if (entry.medication_dose) text += ` (${entry.medication_dose})`
-      if (entry.weight_kg != null) text += ` — ${entry.weight_kg} kg`
+      let summary = `Logged ${entry.event_type}`
+      if (entry.medication_name) summary += ` — ${entry.medication_name}`
+      if (entry.medication_dose) summary += ` (${entry.medication_dose})`
+      if (entry.weight_kg != null) summary += ` — ${entry.weight_kg} kg`
 
       return {
-        content: [{ type: "text" as const, text }],
+        content: [],
+        structuredContent: {
+          entry_id: entry.id,
+          entry_type: "event" as const,
+          summary,
+        },
       }
     }
   )
