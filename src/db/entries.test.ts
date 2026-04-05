@@ -2,11 +2,11 @@ import { describe, expect, test } from "bun:test"
 import { config } from "@src/config"
 import { listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog, getDog } from "@src/db/dogs"
-import { listRecentEntries } from "@src/db/entries"
 import { createFoodEntry, getFoodEntry, listFoodEntries } from "@src/db/food-entries"
 import { createFood, updateFood } from "@src/db/foods"
 import { listHealthEntries } from "@src/db/health-entries"
 import { formatDatetime, toUtcSqlite } from "@src/lib/dates"
+import { listRecentEntries } from "@src/services/listEntries"
 import { useTestApp } from "@src/test/app"
 import {
   createTestBowelEntry,

@@ -1,5 +1,5 @@
 import { Timestamp } from "@src/components/Timestamp"
-import type { TimelineEntry } from "@src/db/entries"
+import type { TimelineEntry } from "@src/services/listEntries"
 
 function editUrl(entry: TimelineEntry): string {
   if (entry.entry_type === "food") {

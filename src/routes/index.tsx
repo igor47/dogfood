@@ -2,9 +2,9 @@ import { EntryTimeline } from "@src/components/EntryTimeline"
 import { Timestamp } from "@src/components/Timestamp"
 import { CONSISTENCY_SCALE, listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog } from "@src/db/dogs"
-import { listRecentEntries } from "@src/db/entries"
 import { listFoodEntries } from "@src/db/food-entries"
 import { todayUtcRange } from "@src/lib/dates"
+import { listRecentEntries } from "@src/services/listEntries"
 import { Hono } from "hono"
 
 export const indexRoutes = new Hono()

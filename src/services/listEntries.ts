@@ -1,4 +1,7 @@
-import { getDb } from "../db"
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { getDb } from "@src/db"
+import { getDefaultDog } from "@src/db/dogs"
+import { z } from "zod"
 
 export interface TimelineEntry {
   id: string
@@ -10,10 +13,12 @@ export interface TimelineEntry {
   created_at: string
 }
 
+export type EntryTypeFilter = "food" | "bowel" | "health" | "all"
+
 export function listRecentEntries(
   dogId: string,
   limit = 20,
-  type: "food" | "bowel" | "health" | "all" = "all"
+  type: EntryTypeFilter = "all"
 ): TimelineEntry[] {
   const db = getDb()
 
@@ -56,4 +61,30 @@ export function listRecentEntries(
   const params = [...parts.map(() => dogId), limit]
 
   return db.query(sql).all(...params) as TimelineEntry[]
+}
+
+export function registerGetRecentEntriesTool(server: McpServer) {
+  server.registerTool(
+    "get_recent_entries",
+    {
+      description: "Get recent health log entries for the dog.",
+      inputSchema: {
+        limit: z.number().optional().default(20),
+        entry_type: z
+          .enum(["food", "bowel", "health", "all"])
+          .optional()
+          .default("all")
+          .describe("Filter by entry type"),
+      },
+    },
+    async ({ limit, entry_type }) => {
+      const dog = getDefaultDog()
+      const entries = listRecentEntries(dog.id, limit, entry_type)
+      if (entries.length === 0) {
+        return { content: [{ type: "text" as const, text: "No entries found." }] }
+      }
+      const lines = entries.map((e) => `[${e.occurred_at}] ${e.entry_type}: ${e.summary}`)
+      return { content: [{ type: "text" as const, text: lines.join("\n") }] }
+    }
+  )
 }

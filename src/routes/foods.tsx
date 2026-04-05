@@ -1,5 +1,6 @@
 import type { FoodCategory } from "@src/db/foods"
-import { createFood, deleteFood, getFood, listFoods, updateFood } from "@src/db/foods"
+import { deleteFood, getFood, listFoods, updateFood } from "@src/db/foods"
+import { addFood } from "@src/services/addFood"
 import { Hono } from "hono"
 
 export const foodsRoutes = new Hono()
@@ -159,7 +160,7 @@ foodsRoutes.get("/foods/new", (c) => {
 foodsRoutes.post("/foods/new", async (c) => {
   const body = await c.req.parseBody()
 
-  createFood({
+  addFood({
     name: body.name as string,
     brand: (body.brand as string) || undefined,
     category: (body.category as FoodCategory) || "meal",
