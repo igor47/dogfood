@@ -31,10 +31,20 @@ export function registerLogEventTool(server: McpServer) {
     "log_event",
     {
       description:
-        "Log a health event: medication, vet_visit, weight_check, grooming, or other. Use weight_kg for weight checks and medication_name/medication_dose for medications.",
+        "Log a health event: medication, vet_visit, weight_check, grooming, refused_meal, playdate, walk, training, or other. Use weight_kg for weight checks and medication_name/medication_dose for medications.",
       inputSchema: {
         event_type: z
-          .enum(["medication", "vet_visit", "weight_check", "grooming", "other"])
+          .enum([
+            "medication",
+            "vet_visit",
+            "weight_check",
+            "grooming",
+            "refused_meal",
+            "playdate",
+            "walk",
+            "training",
+            "other",
+          ])
           .describe("Type of event"),
         occurred_at: z
           .string()

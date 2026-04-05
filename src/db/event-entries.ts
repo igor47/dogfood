@@ -7,6 +7,10 @@ export const EVENT_TYPES = [
   { value: "vet_visit", label: "Vet Visit" },
   { value: "weight_check", label: "Weight Check" },
   { value: "grooming", label: "Grooming" },
+  { value: "refused_meal", label: "Refused Meal" },
+  { value: "playdate", label: "Playdate" },
+  { value: "walk", label: "Walk" },
+  { value: "training", label: "Training" },
   { value: "other", label: "Other" },
 ] as const
 
