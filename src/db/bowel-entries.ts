@@ -52,19 +52,19 @@ export interface BowelEntry {
 export function createBowelEntry(data: {
   dog_id: string
   consistency: Consistency
+  occurred_at: string
   color?: BowelColor
   has_blood?: boolean
   has_mucus?: boolean
   straining?: boolean
   urgency?: Urgency
-  occurred_at?: string
   notes?: string
 }): BowelEntry {
   const db = getDb()
   const id = ulid()
   db.run(
     `INSERT INTO bowel_entries (id, dog_id, consistency, color, has_blood, has_mucus, straining, urgency, occurred_at, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       data.dog_id,
@@ -74,7 +74,7 @@ export function createBowelEntry(data: {
       data.has_mucus ? 1 : 0,
       data.straining ? 1 : 0,
       data.urgency ?? 0,
-      data.occurred_at ? toUtcSqlite(data.occurred_at) : null,
+      toUtcSqlite(data.occurred_at),
       data.notes ?? null,
     ]
   )

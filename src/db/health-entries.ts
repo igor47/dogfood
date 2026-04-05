@@ -41,21 +41,21 @@ export interface HealthEntry {
 export function createHealthEntry(data: {
   dog_id: string
   entry_type: HealthEntryType
+  occurred_at: string
   severity?: Severity
-  occurred_at?: string
   notes?: string
 }): HealthEntry {
   const db = getDb()
   const id = ulid()
   db.run(
     `INSERT INTO health_entries (id, dog_id, entry_type, severity, occurred_at, notes)
-     VALUES (?, ?, ?, ?, COALESCE(?, datetime('now')), ?)`,
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [
       id,
       data.dog_id,
       data.entry_type,
       data.severity ?? 1,
-      data.occurred_at ? toUtcSqlite(data.occurred_at) : null,
+      toUtcSqlite(data.occurred_at),
       data.notes ?? null,
     ]
   )

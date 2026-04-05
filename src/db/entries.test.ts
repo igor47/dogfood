@@ -127,6 +127,7 @@ describe("computed calories", () => {
       dog_id: dog.id,
       food_name: "Random treat",
       entry_kind: "treat",
+      meal_time: new Date().toISOString(),
     })
 
     const fetched = getFoodEntry(entry.id)!

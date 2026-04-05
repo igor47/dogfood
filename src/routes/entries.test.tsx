@@ -10,7 +10,7 @@ import {
   createTestFoodEntry,
   createTestHealthEntry,
 } from "@src/test/factories/entries"
-import { makeRequest, parseHtml } from "@src/test/http"
+import { makeRequest } from "@src/test/http"
 
 const testCtx = useTestApp()
 

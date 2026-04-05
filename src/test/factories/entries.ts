@@ -44,7 +44,7 @@ export function createTestFoodEntry(
     entry_kind: overrides?.entry_kind ?? "meal",
     food_id: overrides?.food_id,
     quantity: overrides?.quantity,
-    meal_time: overrides?.meal_time,
+    meal_time: overrides?.meal_time ?? new Date().toISOString(),
   })
 }
 
@@ -56,7 +56,7 @@ export function createTestBowelEntry(
     dog_id: dogId,
     consistency: overrides?.consistency ?? 4,
     color: overrides?.color ?? "brown",
-    occurred_at: overrides?.occurred_at,
+    occurred_at: overrides?.occurred_at ?? new Date().toISOString(),
   })
 }
 
@@ -68,6 +68,6 @@ export function createTestHealthEntry(
     dog_id: dogId,
     entry_type: overrides?.entry_type ?? "energy",
     severity: overrides?.severity ?? 3,
-    occurred_at: overrides?.occurred_at,
+    occurred_at: overrides?.occurred_at ?? new Date().toISOString(),
   })
 }

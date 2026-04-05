@@ -29,6 +29,7 @@ export interface FoodEntry {
 export function createFoodEntry(data: {
   dog_id: string
   food_name: string
+  meal_time: string
   entry_kind?: EntryKind
   food_id?: string
   brand?: string
@@ -36,14 +37,13 @@ export function createFoodEntry(data: {
   amount?: string
   unit?: string
   quantity?: number
-  meal_time?: string
   notes?: string
 }): FoodEntry {
   const db = getDb()
   const id = ulid()
   db.run(
     `INSERT INTO food_entries (id, dog_id, food_id, food_name, brand, food_type, entry_kind, amount, unit, quantity, meal_time, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')), ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       data.dog_id,
@@ -55,7 +55,7 @@ export function createFoodEntry(data: {
       data.amount ?? null,
       data.unit ?? null,
       data.quantity ?? null,
-      data.meal_time ? toUtcSqlite(data.meal_time) : null,
+      toUtcSqlite(data.meal_time),
       data.notes ?? null,
     ]
   )

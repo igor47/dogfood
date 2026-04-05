@@ -1,25 +1,14 @@
 import type { BowelColor, Consistency, Urgency } from "@src/db/bowel-entries"
-import {
-  createBowelEntry,
-  deleteBowelEntry,
-  getBowelEntry,
-  updateBowelEntry,
-} from "@src/db/bowel-entries"
+import { deleteBowelEntry, getBowelEntry, updateBowelEntry } from "@src/db/bowel-entries"
 import { getDefaultDog, updateDog } from "@src/db/dogs"
-import {
-  createFoodEntry,
-  deleteFoodEntry,
-  getFoodEntry,
-  updateFoodEntry,
-} from "@src/db/food-entries"
+import { deleteFoodEntry, getFoodEntry, updateFoodEntry } from "@src/db/food-entries"
 import { getFood, listFoods } from "@src/db/foods"
 import type { HealthEntryType, Severity } from "@src/db/health-entries"
-import {
-  createHealthEntry,
-  deleteHealthEntry,
-  getHealthEntry,
-  updateHealthEntry,
-} from "@src/db/health-entries"
+import { deleteHealthEntry, getHealthEntry, updateHealthEntry } from "@src/db/health-entries"
+import { logBowel } from "@src/services/logBowel"
+import { logHealth } from "@src/services/logHealth"
+import { logMeal } from "@src/services/logMeal"
+import { logTreat } from "@src/services/logTreat"
 import { Hono } from "hono"
 import type { HtmlEscapedString } from "hono/utils/html"
 import { BowelEntryForm } from "../components/BowelEntryForm"
@@ -77,80 +66,51 @@ entriesRoutes.get("/entries/new/:type", (c) => {
 
 // Meal submission
 entriesRoutes.post("/entries/new/meal", async (c) => {
-  const dog = getDefaultDog()
   const body = await c.req.parseBody()
 
-  const foodId = body.food_id as string
-  const food = getFood(foodId)
-  if (!food) return c.text("Food not found", 400)
-
-  const quantity = parseFloat(body.quantity as string)
-
-  createFoodEntry({
-    dog_id: dog.id,
-    food_id: foodId,
-    food_name: food.name,
-    brand: food.brand ?? undefined,
-    entry_kind: "meal",
-    quantity,
-    unit: food.unit,
+  const result = logMeal({
+    food_id: body.food_id as string,
+    quantity: parseFloat(body.quantity as string),
     meal_time: (body.meal_time as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
+  if ("error" in result) return c.text(result.error, 400)
+
   return c.html(
     <div class="alert alert-success">
-      Logged {quantity} {food.unit} of <strong>{food.name}</strong>. <a href="/">Dashboard</a> or{" "}
-      <a href="/entries/new/meal">log another</a>.
+      Logged {result.entry.quantity} {result.food.unit} of <strong>{result.food.name}</strong>.{" "}
+      <a href="/">Dashboard</a> or <a href="/entries/new/meal">log another</a>.
     </div>
   )
 })
 
 // Treat submission
 entriesRoutes.post("/entries/new/treat", async (c) => {
-  const dog = getDefaultDog()
   const body = await c.req.parseBody()
 
-  const foodId = (body.food_id as string) || undefined
-  const quantity = body.quantity ? parseFloat(body.quantity as string) : 1
-
-  let foodName: string
-  let unit: string | undefined
-
-  if (foodId) {
-    const food = getFood(foodId)
-    if (!food) return c.text("Food not found", 400)
-    foodName = food.name
-    unit = food.unit
-  } else {
-    foodName = (body.food_name as string) || "Treat"
-  }
-
-  createFoodEntry({
-    dog_id: dog.id,
-    food_id: foodId,
-    food_name: foodName,
-    entry_kind: "treat",
-    quantity,
-    unit,
+  const result = logTreat({
+    food_id: (body.food_id as string) || undefined,
+    food_name: (body.food_name as string) || undefined,
+    quantity: body.quantity ? parseFloat(body.quantity as string) : undefined,
     meal_time: (body.meal_time as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
+  if ("error" in result) return c.text(result.error, 400)
+
   return c.html(
     <div class="alert alert-success">
-      Logged {quantity} x <strong>{foodName}</strong>. <a href="/">Dashboard</a> or{" "}
+      Logged {result.entry.quantity} x <strong>{result.name}</strong>. <a href="/">Dashboard</a> or{" "}
       <a href="/entries/new/treat">log another</a>.
     </div>
   )
 })
 
 entriesRoutes.post("/entries/new/bowel", async (c) => {
-  const dog = getDefaultDog()
   const body = await c.req.parseBody()
 
-  const entry = createBowelEntry({
-    dog_id: dog.id,
+  const entry = logBowel({
     consistency: parseInt(body.consistency as string, 10) as Consistency,
     color: (body.color as BowelColor) || undefined,
     has_blood: body.has_blood === "on",
@@ -170,11 +130,9 @@ entriesRoutes.post("/entries/new/bowel", async (c) => {
 })
 
 entriesRoutes.post("/entries/new/health", async (c) => {
-  const dog = getDefaultDog()
   const body = await c.req.parseBody()
 
-  const entry = createHealthEntry({
-    dog_id: dog.id,
+  const entry = logHealth({
     entry_type: body.entry_type as HealthEntryType,
     severity: body.severity ? (parseInt(body.severity as string, 10) as Severity) : undefined,
     occurred_at: (body.occurred_at as string) || undefined,
