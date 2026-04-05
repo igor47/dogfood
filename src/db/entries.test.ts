@@ -129,7 +129,7 @@ describe("timeline entries", () => {
     createTestSymptomEntry(dog.id, { occurred_at: "2025-01-01 10:00:00" })
     createTestEventEntry(dog.id, { occurred_at: "2025-01-01 11:00:00" })
 
-    const entries = listRecentEntries(dog.id)
+    const entries = listRecentEntries(dog.id, {})
     expect(entries).toHaveLength(4)
     // Most recent first
     expect(entries[0]!.entry_type).toBe("event")
@@ -145,13 +145,70 @@ describe("timeline entries", () => {
     createTestSymptomEntry(dog.id)
     createTestEventEntry(dog.id)
 
-    const foodOnly = listRecentEntries(dog.id, 20, "food")
+    const foodOnly = listRecentEntries(dog.id, { limit: 20, type: "food" })
     expect(foodOnly).toHaveLength(1)
     expect(foodOnly[0]!.entry_type).toBe("food")
 
-    const symptomOnly = listRecentEntries(dog.id, 20, "symptom")
+    const symptomOnly = listRecentEntries(dog.id, { limit: 20, type: "symptom" })
     expect(symptomOnly).toHaveLength(1)
     expect(symptomOnly[0]!.entry_type).toBe("symptom")
+  })
+
+  test("listRecentEntries filters by after date (inclusive)", () => {
+    const dog = createTestDog()
+    createTestFoodEntry(dog.id, { occurred_at: "2025-01-01 08:00:00" })
+    createTestBowelEntry(dog.id, { occurred_at: "2025-01-02 09:00:00" })
+    createTestSymptomEntry(dog.id, { occurred_at: "2025-01-03 10:00:00" })
+
+    // after=2025-01-02 includes entries on Jan 2
+    const entries = listRecentEntries(dog.id, { after: "2025-01-02" })
+    expect(entries).toHaveLength(2)
+    expect(entries[0]!.entry_type).toBe("symptom")
+    expect(entries[1]!.entry_type).toBe("bowel")
+  })
+
+  test("listRecentEntries filters by before date (inclusive)", () => {
+    const dog = createTestDog()
+    createTestFoodEntry(dog.id, { occurred_at: "2025-01-01 08:00:00" })
+    createTestBowelEntry(dog.id, { occurred_at: "2025-01-02 09:00:00" })
+    createTestSymptomEntry(dog.id, { occurred_at: "2025-01-03 10:00:00" })
+
+    // before=2025-01-02 includes entries on Jan 2 (bare date gets 23:59:59)
+    const entries = listRecentEntries(dog.id, { before: "2025-01-02" })
+    expect(entries).toHaveLength(2)
+    expect(entries[0]!.entry_type).toBe("bowel")
+    expect(entries[1]!.entry_type).toBe("food")
+  })
+
+  test("listRecentEntries filters by date range (inclusive)", () => {
+    const dog = createTestDog()
+    createTestFoodEntry(dog.id, { occurred_at: "2025-01-01 08:00:00" })
+    createTestBowelEntry(dog.id, { occurred_at: "2025-01-02 09:00:00" })
+    createTestSymptomEntry(dog.id, { occurred_at: "2025-01-03 10:00:00" })
+    createTestEventEntry(dog.id, { occurred_at: "2025-01-04 11:00:00" })
+
+    // Both start and end dates are inclusive
+    const entries = listRecentEntries(dog.id, {
+      after: "2025-01-02",
+      before: "2025-01-03",
+    })
+    expect(entries).toHaveLength(2)
+    expect(entries[0]!.entry_type).toBe("symptom")
+    expect(entries[1]!.entry_type).toBe("bowel")
+  })
+
+  test("listRecentEntries combines type and date filters", () => {
+    const dog = createTestDog()
+    createTestFoodEntry(dog.id, { occurred_at: "2025-01-01 08:00:00" })
+    createTestFoodEntry(dog.id, { occurred_at: "2025-01-03 08:00:00" })
+    createTestBowelEntry(dog.id, { occurred_at: "2025-01-02 09:00:00" })
+
+    const entries = listRecentEntries(dog.id, {
+      type: "food",
+      after: "2025-01-02",
+    })
+    expect(entries).toHaveLength(1)
+    expect(entries[0]!.entry_type).toBe("food")
   })
 })
 
@@ -203,7 +260,7 @@ describe("computed calories", () => {
     const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
     createTestFoodEntry(dog.id, { food_id: food.id, quantity: 1 })
 
-    const entries = listRecentEntries(dog.id, 10, "food")
+    const entries = listRecentEntries(dog.id, { limit: 10, type: "food" })
     expect(entries[0]!.summary).toContain("350 cal")
   })
 })

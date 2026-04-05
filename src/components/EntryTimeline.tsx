@@ -42,64 +42,114 @@ interface EntryTimelineProps {
   entries: TimelineEntry[]
   showTypeFilter?: boolean
   currentType?: string
+  after?: string
+  before?: string
 }
 
-export const EntryTimeline = ({ entries, showTypeFilter, currentType }: EntryTimelineProps) => {
+export const EntryTimeline = ({
+  entries,
+  showTypeFilter,
+  currentType,
+  after,
+  before,
+}: EntryTimelineProps) => {
+  const typeParam = currentType && currentType !== "all" ? `&type=${currentType}` : ""
+
   return (
     <div id="entry-timeline">
       {showTypeFilter && (
-        <div class="btn-group mb-3" role="toolbar" aria-label="Filter entries by type">
-          <button
-            type="button"
-            hx-get="/timeline"
-            hx-target="#entry-timeline"
-            hx-swap="outerHTML"
-            hx-push-url="/"
-            class={`btn btn-sm ${!currentType || currentType === "all" ? "btn-primary" : "btn-outline-primary"}`}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            hx-get="/timeline?type=food"
-            hx-target="#entry-timeline"
-            hx-swap="outerHTML"
-            hx-push-url="/?type=food"
-            class={`btn btn-sm ${currentType === "food" ? "btn-success" : "btn-outline-success"}`}
-          >
-            Food
-          </button>
-          <button
-            type="button"
-            hx-get="/timeline?type=bowel"
-            hx-target="#entry-timeline"
-            hx-swap="outerHTML"
-            hx-push-url="/?type=bowel"
-            class={`btn btn-sm ${currentType === "bowel" ? "btn-warning" : "btn-outline-warning"}`}
-          >
-            Bowel
-          </button>
-          <button
-            type="button"
-            hx-get="/timeline?type=symptom"
-            hx-target="#entry-timeline"
-            hx-swap="outerHTML"
-            hx-push-url="/?type=symptom"
-            class={`btn btn-sm ${currentType === "symptom" ? "btn-info" : "btn-outline-info"}`}
-          >
-            Symptom
-          </button>
-          <button
-            type="button"
-            hx-get="/timeline?type=event"
-            hx-target="#entry-timeline"
-            hx-swap="outerHTML"
-            hx-push-url="/?type=event"
-            class={`btn btn-sm ${currentType === "event" ? "btn-primary" : "btn-outline-primary"}`}
-          >
-            Event
-          </button>
-        </div>
+        <>
+          <div class="btn-group mb-2" role="toolbar" aria-label="Filter entries by type">
+            <button
+              type="button"
+              hx-get="/timeline"
+              hx-include="#date-filters"
+              hx-target="#entry-timeline"
+              hx-swap="outerHTML"
+              class={`btn btn-sm ${!currentType || currentType === "all" ? "btn-primary" : "btn-outline-primary"}`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              hx-get="/timeline?type=food"
+              hx-include="#date-filters"
+              hx-target="#entry-timeline"
+              hx-swap="outerHTML"
+              class={`btn btn-sm ${currentType === "food" ? "btn-success" : "btn-outline-success"}`}
+            >
+              Food
+            </button>
+            <button
+              type="button"
+              hx-get="/timeline?type=bowel"
+              hx-include="#date-filters"
+              hx-target="#entry-timeline"
+              hx-swap="outerHTML"
+              class={`btn btn-sm ${currentType === "bowel" ? "btn-warning" : "btn-outline-warning"}`}
+            >
+              Bowel
+            </button>
+            <button
+              type="button"
+              hx-get="/timeline?type=symptom"
+              hx-include="#date-filters"
+              hx-target="#entry-timeline"
+              hx-swap="outerHTML"
+              class={`btn btn-sm ${currentType === "symptom" ? "btn-info" : "btn-outline-info"}`}
+            >
+              Symptom
+            </button>
+            <button
+              type="button"
+              hx-get="/timeline?type=event"
+              hx-include="#date-filters"
+              hx-target="#entry-timeline"
+              hx-swap="outerHTML"
+              class={`btn btn-sm ${currentType === "event" ? "btn-primary" : "btn-outline-primary"}`}
+            >
+              Event
+            </button>
+          </div>
+          <div id="date-filters" class="d-flex gap-2 mb-3 align-items-center">
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              name="after"
+              value={after || ""}
+              style="max-width: 160px"
+              hx-get={`/timeline?${typeParam}`}
+              hx-include="#date-filters"
+              hx-target="#entry-timeline"
+              hx-swap="outerHTML"
+              hx-trigger="change"
+            />
+            <span class="text-muted">to</span>
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              name="before"
+              value={before || ""}
+              style="max-width: 160px"
+              hx-get={`/timeline?${typeParam}`}
+              hx-include="#date-filters"
+              hx-target="#entry-timeline"
+              hx-swap="outerHTML"
+              hx-trigger="change"
+            />
+            {(after || before) && (
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                hx-get={`/timeline?${typeParam}`}
+                hx-target="#entry-timeline"
+                hx-swap="outerHTML"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </>
       )}
 
       {entries.length === 0 ? (

@@ -13,15 +13,27 @@ export const indexRoutes = new Hono()
 indexRoutes.get("/timeline", (c) => {
   const dog = getDefaultDog()
   const type = (c.req.query("type") as "food" | "bowel" | "symptom" | "event" | "all") || "all"
-  const entries = listRecentEntries(dog.id, 50, type)
-  return c.html(<EntryTimeline entries={entries} showTypeFilter currentType={type} />)
+  const after = c.req.query("after") || undefined
+  const before = c.req.query("before") || undefined
+  const entries = listRecentEntries(dog.id, { limit: 50, type, after, before })
+  return c.html(
+    <EntryTimeline
+      entries={entries}
+      showTypeFilter
+      currentType={type}
+      after={after}
+      before={before}
+    />
+  )
 })
 
 indexRoutes.get("/", (c) => {
   const dog = getDefaultDog()
   const saved = c.req.query("saved") === "1"
   const type = (c.req.query("type") as "food" | "bowel" | "symptom" | "event" | "all") || "all"
-  const timelineEntries = listRecentEntries(dog.id, 50, type)
+  const after = c.req.query("after") || undefined
+  const before = c.req.query("before") || undefined
+  const timelineEntries = listRecentEntries(dog.id, { limit: 50, type, after, before })
   const today = todayUtcRange()
   const todaysFood = listFoodEntries(dog.id, { after: today.start, before: today.end })
   const todaysTotalCal = todaysFood.reduce((sum, f) => sum + (f.calories ?? 0), 0)
@@ -133,7 +145,13 @@ indexRoutes.get("/", (c) => {
       </div>
 
       <h4>Timeline</h4>
-      <EntryTimeline entries={timelineEntries} showTypeFilter currentType={type} />
+      <EntryTimeline
+        entries={timelineEntries}
+        showTypeFilter
+        currentType={type}
+        after={after}
+        before={before}
+      />
     </div>,
     { title: "Dogfood" }
   )
