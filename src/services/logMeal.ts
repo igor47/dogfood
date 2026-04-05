@@ -7,7 +7,7 @@ import { z } from "zod"
 export interface LogMealInput {
   food_id: string
   quantity: number
-  meal_time?: string
+  occurred_at?: string
   notes?: string
 }
 
@@ -35,7 +35,7 @@ export function logMeal(input: LogMealInput): LogMealResult | { error: string } 
     entry_kind: "meal",
     quantity: input.quantity,
     unit: food.unit,
-    meal_time: input.meal_time || new Date().toISOString(),
+    occurred_at: input.occurred_at || new Date().toISOString(),
     notes: input.notes,
   })
 
@@ -51,7 +51,7 @@ export function registerLogMealTool(server: McpServer) {
       inputSchema: {
         food_id: z.string().describe("ID of the food from the catalog"),
         quantity: z.number().describe("Amount in the food's unit (e.g. 1.5 cups)"),
-        meal_time: z
+        occurred_at: z
           .string()
           .optional()
           .describe(
@@ -65,8 +65,8 @@ export function registerLogMealTool(server: McpServer) {
         summary: z.string().describe("Human-readable summary of what was logged"),
       },
     },
-    async ({ food_id, quantity, meal_time, notes }) => {
-      const result = logMeal({ food_id, quantity, meal_time, notes })
+    async ({ food_id, quantity, occurred_at, notes }) => {
+      const result = logMeal({ food_id, quantity, occurred_at, notes })
       if ("error" in result) {
         return {
           content: [{ type: "text" as const, text: result.error }],

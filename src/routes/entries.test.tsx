@@ -24,7 +24,7 @@ describe("POST /entries/new/meal", () => {
     const form = new FormData()
     form.append("food_id", food.id)
     form.append("quantity", "1.5")
-    form.append("meal_time", "2026-03-28T12:00:00Z")
+    form.append("occurred_at", "2026-03-28T12:00:00Z")
 
     const response = await makeRequest(testCtx.app, "/entries/new/meal", {
       method: "POST",
@@ -75,7 +75,7 @@ describe("POST /entries/new/meal", () => {
 
     const entries = listFoodEntries(dog.id)
     expect(entries).toHaveLength(1)
-    expect(entries[0]!.meal_time).toBeTruthy() // defaults to now via COALESCE
+    expect(entries[0]!.occurred_at).toBeTruthy() // defaults to now via COALESCE
   })
 })
 

@@ -37,7 +37,7 @@ export function createTestFoodEntry(
     entry_kind?: EntryKind
     food_id?: string
     quantity?: number
-    meal_time?: string
+    occurred_at?: string
   }
 ) {
   return createFoodEntry({
@@ -46,7 +46,7 @@ export function createTestFoodEntry(
     entry_kind: overrides?.entry_kind ?? "meal",
     food_id: overrides?.food_id,
     quantity: overrides?.quantity,
-    meal_time: overrides?.meal_time ?? new Date().toISOString(),
+    occurred_at: overrides?.occurred_at ?? new Date().toISOString(),
   })
 }
 

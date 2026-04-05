@@ -106,7 +106,7 @@ entriesRoutes.post("/entries/new/meal", async (c) => {
   const result = logMeal({
     food_id: body.food_id as string,
     quantity: parseFloat(body.quantity as string),
-    meal_time: (body.meal_time as string) || undefined,
+    occurred_at: (body.occurred_at as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
@@ -130,7 +130,7 @@ entriesRoutes.post("/entries/new/treat", async (c) => {
     food_id: (body.food_id as string) || undefined,
     food_name: (body.food_name as string) || undefined,
     quantity: body.quantity ? parseFloat(body.quantity as string) : undefined,
-    meal_time: (body.meal_time as string) || undefined,
+    occurred_at: (body.occurred_at as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
@@ -252,7 +252,7 @@ entriesRoutes.post("/entries/meal/:id/edit", async (c) => {
     food_name: food.name,
     quantity: parseFloat(body.quantity as string),
     unit: food.unit,
-    meal_time: (body.meal_time as string) || undefined,
+    occurred_at: (body.occurred_at as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 
@@ -303,7 +303,7 @@ entriesRoutes.post("/entries/treat/:id/edit", async (c) => {
     food_name: foodName,
     quantity: body.quantity ? parseFloat(body.quantity as string) : undefined,
     unit,
-    meal_time: (body.meal_time as string) || undefined,
+    occurred_at: (body.occurred_at as string) || undefined,
     notes: (body.notes as string) || undefined,
   })
 

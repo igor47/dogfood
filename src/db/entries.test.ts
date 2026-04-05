@@ -124,7 +124,7 @@ describe("event entries", () => {
 describe("timeline entries", () => {
   test("listRecentEntries returns all types sorted by time", () => {
     const dog = createTestDog()
-    createTestFoodEntry(dog.id, { meal_time: "2025-01-01 08:00:00" })
+    createTestFoodEntry(dog.id, { occurred_at: "2025-01-01 08:00:00" })
     createTestBowelEntry(dog.id, { occurred_at: "2025-01-01 09:00:00" })
     createTestSymptomEntry(dog.id, { occurred_at: "2025-01-01 10:00:00" })
     createTestEventEntry(dog.id, { occurred_at: "2025-01-01 11:00:00" })
@@ -171,7 +171,7 @@ describe("computed calories", () => {
       dog_id: dog.id,
       food_name: "Random treat",
       entry_kind: "treat",
-      meal_time: new Date().toISOString(),
+      occurred_at: new Date().toISOString(),
     })
 
     const fetched = getFoodEntry(entry.id)!
@@ -268,9 +268,9 @@ describe("date parsing", () => {
   test("food entries store normalized UTC dates from ISO with offset", () => {
     const dog = createTestDog()
     const entry = createTestFoodEntry(dog.id, {
-      meal_time: "2026-03-28T17:00:00-07:00",
+      occurred_at: "2026-03-28T17:00:00-07:00",
     })
-    expect(entry.meal_time).toBe("2026-03-29 00:00:00")
+    expect(entry.occurred_at).toBe("2026-03-29 00:00:00")
   })
 
   test("bowel entries store normalized UTC dates from ISO with offset", () => {

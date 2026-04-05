@@ -20,7 +20,7 @@ export interface FoodEntry {
   amount: string | null
   unit: string | null
   quantity: number | null
-  meal_time: string
+  occurred_at: string
   notes: string | null
   created_at: string
   calories: number | null
@@ -29,7 +29,7 @@ export interface FoodEntry {
 export function createFoodEntry(data: {
   dog_id: string
   food_name: string
-  meal_time: string
+  occurred_at: string
   entry_kind?: EntryKind
   food_id?: string
   brand?: string
@@ -42,7 +42,7 @@ export function createFoodEntry(data: {
   const db = getDb()
   const id = ulid()
   db.run(
-    `INSERT INTO food_entries (id, dog_id, food_id, food_name, brand, food_type, entry_kind, amount, unit, quantity, meal_time, notes)
+    `INSERT INTO food_entries (id, dog_id, food_id, food_name, brand, food_type, entry_kind, amount, unit, quantity, occurred_at, notes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
@@ -55,7 +55,7 @@ export function createFoodEntry(data: {
       data.amount ?? null,
       data.unit ?? null,
       data.quantity ?? null,
-      toUtcSqlite(data.meal_time),
+      toUtcSqlite(data.occurred_at),
       data.notes ?? null,
     ]
   )
@@ -87,18 +87,18 @@ export function listFoodEntries(
     params.push(opts.kind)
   }
   if (opts?.after) {
-    conditions.push("food_entries.meal_time >= ?")
+    conditions.push("food_entries.occurred_at >= ?")
     params.push(opts.after)
   }
   if (opts?.before) {
-    conditions.push("food_entries.meal_time <= ?")
+    conditions.push("food_entries.occurred_at <= ?")
     params.push(opts.before)
   }
 
   params.push(opts?.limit ?? 50)
   return db
     .query(
-      `${FOOD_ENTRY_SELECT} WHERE ${conditions.join(" AND ")} ORDER BY food_entries.meal_time DESC LIMIT ?`
+      `${FOOD_ENTRY_SELECT} WHERE ${conditions.join(" AND ")} ORDER BY food_entries.occurred_at DESC LIMIT ?`
     )
     .all(...params) as FoodEntry[]
 }
@@ -111,7 +111,7 @@ export function updateFoodEntry(
     entry_kind?: EntryKind
     quantity?: number
     unit?: string
-    meal_time?: string
+    occurred_at?: string
     notes?: string
   }
 ): FoodEntry | null {
@@ -139,9 +139,9 @@ export function updateFoodEntry(
     fields.push("unit = ?")
     values.push(data.unit)
   }
-  if (data.meal_time !== undefined) {
-    fields.push("meal_time = ?")
-    values.push(toUtcSqlite(data.meal_time))
+  if (data.occurred_at !== undefined) {
+    fields.push("occurred_at = ?")
+    values.push(toUtcSqlite(data.occurred_at))
   }
   if (data.notes !== undefined) {
     fields.push("notes = ?")

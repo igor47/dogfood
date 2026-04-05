@@ -69,8 +69,8 @@ export const TreatEntryForm = ({ foods, entry, uploads }: TreatEntryFormProps) =
       <div class="row mb-3">
         <div class="col-md-6">
           <DatetimeInput
-            name="meal_time"
-            value={entry ? toLocalInputValue(entry.meal_time) : undefined}
+            name="occurred_at"
+            value={entry ? toLocalInputValue(entry.occurred_at) : undefined}
           />
         </div>
       </div>

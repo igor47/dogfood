@@ -8,7 +8,7 @@ export interface LogTreatInput {
   food_id?: string
   food_name?: string
   quantity?: number
-  meal_time?: string
+  occurred_at?: string
   notes?: string
 }
 
@@ -47,7 +47,7 @@ export function logTreat(input: LogTreatInput): LogTreatResult | { error: string
     entry_kind: "treat",
     quantity,
     unit,
-    meal_time: input.meal_time || new Date().toISOString(),
+    occurred_at: input.occurred_at || new Date().toISOString(),
     notes: input.notes,
   })
 
@@ -64,7 +64,7 @@ export function registerLogTreatTool(server: McpServer) {
         food_id: z.string().optional().describe("ID of the treat from the catalog, if defined"),
         food_name: z.string().optional().describe("Free-form name if not using a catalog food"),
         quantity: z.number().optional().default(1).describe("How many (defaults to 1)"),
-        meal_time: z
+        occurred_at: z
           .string()
           .optional()
           .describe(
@@ -78,8 +78,8 @@ export function registerLogTreatTool(server: McpServer) {
         summary: z.string().describe("Human-readable summary of what was logged"),
       },
     },
-    async ({ food_id, food_name, quantity, meal_time, notes }) => {
-      const result = logTreat({ food_id, food_name, quantity, meal_time, notes })
+    async ({ food_id, food_name, quantity, occurred_at, notes }) => {
+      const result = logTreat({ food_id, food_name, quantity, occurred_at, notes })
       if ("error" in result) {
         return {
           content: [{ type: "text" as const, text: result.error }],

@@ -68,7 +68,7 @@ indexRoutes.get("/", (c) => {
                         )}
                         {f.calories != null && <span class="text-muted"> ({f.calories} cal)</span>}
                         <small class="text-muted d-block">
-                          <Timestamp datetime={f.meal_time} format="time" />
+                          <Timestamp datetime={f.occurred_at} format="time" />
                         </small>
                       </li>
                     ))}
