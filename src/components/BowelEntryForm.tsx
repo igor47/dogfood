@@ -2,6 +2,7 @@ import type { BowelEntry } from "@src/db/bowel-entries"
 import { BOWEL_COLORS, CONSISTENCY_SCALE, URGENCY_LEVELS } from "@src/db/bowel-entries"
 import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { DatetimeInput } from "./DatetimeInput"
 import { UploadSection } from "./UploadSection"
 
 interface BowelEntryFormProps {
@@ -117,15 +118,9 @@ export const BowelEntryForm = ({ entry, uploads }: BowelEntryFormProps) => {
 
       <div class="row mb-3">
         <div class="col-md-6">
-          <label for="occurred_at" class="form-label">
-            When
-          </label>
-          <input
-            type="datetime-local"
-            class="form-control"
-            id="occurred_at"
+          <DatetimeInput
             name="occurred_at"
-            value={entry ? toLocalInputValue(entry.occurred_at) : ""}
+            value={entry ? toLocalInputValue(entry.occurred_at) : undefined}
           />
         </div>
       </div>

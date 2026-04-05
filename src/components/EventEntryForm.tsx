@@ -2,6 +2,7 @@ import type { EventEntry } from "@src/db/event-entries"
 import { EVENT_TYPES } from "@src/db/event-entries"
 import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { DatetimeInput } from "./DatetimeInput"
 import { UploadSection } from "./UploadSection"
 
 interface EventEntryFormProps {
@@ -47,15 +48,9 @@ export const EventEntryForm = ({ entry, uploads }: EventEntryFormProps) => {
       </div>
 
       <div class="mb-3">
-        <label for="occurred_at" class="form-label">
-          When
-        </label>
-        <input
-          type="datetime-local"
-          class="form-control"
-          id="occurred_at"
+        <DatetimeInput
           name="occurred_at"
-          value={entry ? toLocalInputValue(entry.occurred_at) : ""}
+          value={entry ? toLocalInputValue(entry.occurred_at) : undefined}
         />
       </div>
 

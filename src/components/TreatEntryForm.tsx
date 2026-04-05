@@ -2,6 +2,7 @@ import type { FoodEntry } from "@src/db/food-entries"
 import type { Food } from "@src/db/foods"
 import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { DatetimeInput } from "./DatetimeInput"
 import { UploadSection } from "./UploadSection"
 
 interface TreatEntryFormProps {
@@ -67,15 +68,9 @@ export const TreatEntryForm = ({ foods, entry, uploads }: TreatEntryFormProps) =
 
       <div class="row mb-3">
         <div class="col-md-6">
-          <label for="meal_time" class="form-label">
-            When
-          </label>
-          <input
-            type="datetime-local"
-            class="form-control"
-            id="meal_time"
+          <DatetimeInput
             name="meal_time"
-            value={entry ? toLocalInputValue(entry.meal_time) : ""}
+            value={entry ? toLocalInputValue(entry.meal_time) : undefined}
           />
         </div>
       </div>

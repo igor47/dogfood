@@ -2,6 +2,7 @@ import type { SymptomEntry } from "@src/db/symptom-entries"
 import { SEVERITY_LEVELS, SYMPTOM_TYPES } from "@src/db/symptom-entries"
 import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { DatetimeInput } from "./DatetimeInput"
 import { UploadSection } from "./UploadSection"
 
 interface SymptomEntryFormProps {
@@ -51,15 +52,9 @@ export const SymptomEntryForm = ({ entry, uploads }: SymptomEntryFormProps) => {
       </div>
 
       <div class="mb-3">
-        <label for="occurred_at" class="form-label">
-          When
-        </label>
-        <input
-          type="datetime-local"
-          class="form-control"
-          id="occurred_at"
+        <DatetimeInput
           name="occurred_at"
-          value={entry ? toLocalInputValue(entry.occurred_at) : ""}
+          value={entry ? toLocalInputValue(entry.occurred_at) : undefined}
         />
       </div>
 
