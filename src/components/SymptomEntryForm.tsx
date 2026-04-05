@@ -1,17 +1,25 @@
 import type { SymptomEntry } from "@src/db/symptom-entries"
 import { SEVERITY_LEVELS, SYMPTOM_TYPES } from "@src/db/symptom-entries"
+import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { UploadSection } from "./UploadSection"
 
 interface SymptomEntryFormProps {
   entry?: SymptomEntry
+  uploads?: Upload[]
 }
 
-export const SymptomEntryForm = ({ entry }: SymptomEntryFormProps) => {
+export const SymptomEntryForm = ({ entry, uploads }: SymptomEntryFormProps) => {
   const action = entry ? `/entries/symptom/${entry.id}/edit` : "/entries/new/symptom"
   const submitLabel = entry ? "Save" : "Log Symptom"
 
   return (
-    <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
+    <form
+      hx-post={action}
+      hx-target="#form-result"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data"
+    >
       <div class="row mb-3">
         <div class="col-md-6">
           <label for="symptom_type" class="form-label">
@@ -63,6 +71,8 @@ export const SymptomEntryForm = ({ entry }: SymptomEntryFormProps) => {
           {entry?.notes ?? ""}
         </textarea>
       </div>
+
+      <UploadSection uploads={uploads} />
 
       <button type="submit" class="btn btn-info">
         {submitLabel}

@@ -1,18 +1,26 @@
 import type { FoodEntry } from "@src/db/food-entries"
 import type { Food } from "@src/db/foods"
+import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { UploadSection } from "./UploadSection"
 
 interface MealEntryFormProps {
   foods: Food[]
   entry?: FoodEntry
+  uploads?: Upload[]
 }
 
-export const MealEntryForm = ({ foods, entry }: MealEntryFormProps) => {
+export const MealEntryForm = ({ foods, entry, uploads }: MealEntryFormProps) => {
   const action = entry ? `/entries/meal/${entry.id}/edit` : "/entries/new/meal"
   const submitLabel = entry ? "Save" : "Log Meal"
 
   return (
-    <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
+    <form
+      hx-post={action}
+      hx-target="#form-result"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data"
+    >
       {foods.length === 0 ? (
         <div class="alert alert-warning">
           No meal foods defined yet. <a href="/foods/new?category=meal">Add a food first</a>.
@@ -77,6 +85,8 @@ export const MealEntryForm = ({ foods, entry }: MealEntryFormProps) => {
               {entry?.notes ?? ""}
             </textarea>
           </div>
+
+          <UploadSection uploads={uploads} />
 
           <button type="submit" class="btn btn-success">
             {submitLabel}

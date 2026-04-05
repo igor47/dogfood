@@ -1,17 +1,25 @@
 import type { BowelEntry } from "@src/db/bowel-entries"
 import { BOWEL_COLORS, CONSISTENCY_SCALE, URGENCY_LEVELS } from "@src/db/bowel-entries"
+import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { UploadSection } from "./UploadSection"
 
 interface BowelEntryFormProps {
   entry?: BowelEntry
+  uploads?: Upload[]
 }
 
-export const BowelEntryForm = ({ entry }: BowelEntryFormProps) => {
+export const BowelEntryForm = ({ entry, uploads }: BowelEntryFormProps) => {
   const action = entry ? `/entries/bowel/${entry.id}/edit` : "/entries/new/bowel"
   const submitLabel = entry ? "Save" : "Log Bowel Movement"
 
   return (
-    <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
+    <form
+      hx-post={action}
+      hx-target="#form-result"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data"
+    >
       <fieldset class="mb-3">
         <legend class="form-label fs-6">Consistency (1-7)</legend>
         <div class="d-flex flex-column gap-1">
@@ -130,6 +138,8 @@ export const BowelEntryForm = ({ entry }: BowelEntryFormProps) => {
           {entry?.notes ?? ""}
         </textarea>
       </div>
+
+      <UploadSection uploads={uploads} />
 
       <button type="submit" class="btn btn-warning">
         {submitLabel}

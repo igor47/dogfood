@@ -1,18 +1,26 @@
 import type { FoodEntry } from "@src/db/food-entries"
 import type { Food } from "@src/db/foods"
+import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { UploadSection } from "./UploadSection"
 
 interface TreatEntryFormProps {
   foods: Food[]
   entry?: FoodEntry
+  uploads?: Upload[]
 }
 
-export const TreatEntryForm = ({ foods, entry }: TreatEntryFormProps) => {
+export const TreatEntryForm = ({ foods, entry, uploads }: TreatEntryFormProps) => {
   const action = entry ? `/entries/treat/${entry.id}/edit` : "/entries/new/treat"
   const submitLabel = entry ? "Save" : "Log Treat"
 
   return (
-    <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
+    <form
+      hx-post={action}
+      hx-target="#form-result"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data"
+    >
       <div class="mb-3">
         <label for="food_id" class="form-label">
           Treat
@@ -80,6 +88,8 @@ export const TreatEntryForm = ({ foods, entry }: TreatEntryFormProps) => {
           {entry?.notes ?? ""}
         </textarea>
       </div>
+
+      <UploadSection uploads={uploads} />
 
       <button type="submit" class="btn btn-success">
         {submitLabel}

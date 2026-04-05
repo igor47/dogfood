@@ -9,6 +9,7 @@ import { foodsRoutes } from "./routes/foods"
 import { healthRoutes } from "./routes/health"
 import { indexRoutes } from "./routes/index"
 import { mcpRoutes } from "./routes/mcp"
+import { uploadsRoutes } from "./routes/uploads"
 
 // Update typescript to indicate the title prop on the layout
 // see: https://hono.dev/docs/api/context#render-setrenderer
@@ -47,6 +48,7 @@ export function createApp() {
   app.route("/", indexRoutes)
   app.route("/", entriesRoutes)
   app.route("/", foodsRoutes)
+  app.route("/", uploadsRoutes)
 
   // Error handler
   app.onError((err, c) => {

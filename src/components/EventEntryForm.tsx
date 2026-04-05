@@ -1,17 +1,25 @@
 import type { EventEntry } from "@src/db/event-entries"
 import { EVENT_TYPES } from "@src/db/event-entries"
+import type { Upload } from "@src/db/uploads"
 import { toLocalInputValue } from "@src/lib/dates"
+import { UploadSection } from "./UploadSection"
 
 interface EventEntryFormProps {
   entry?: EventEntry
+  uploads?: Upload[]
 }
 
-export const EventEntryForm = ({ entry }: EventEntryFormProps) => {
+export const EventEntryForm = ({ entry, uploads }: EventEntryFormProps) => {
   const action = entry ? `/entries/event/${entry.id}/edit` : "/entries/new/event"
   const submitLabel = entry ? "Save" : "Log Event"
 
   return (
-    <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
+    <form
+      hx-post={action}
+      hx-target="#form-result"
+      hx-swap="innerHTML"
+      hx-encoding="multipart/form-data"
+    >
       <div class="mb-3">
         <label for="event_type" class="form-label">
           Event Type
@@ -59,6 +67,8 @@ export const EventEntryForm = ({ entry }: EventEntryFormProps) => {
           {entry?.notes ?? ""}
         </textarea>
       </div>
+
+      <UploadSection uploads={uploads} />
 
       <button type="submit" class="btn btn-primary">
         {submitLabel}
@@ -140,5 +150,5 @@ export const EventExtraFields = ({
     )
   }
 
-  return <></>
+  return null
 }

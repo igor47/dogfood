@@ -6,6 +6,7 @@ export const config = {
   repoRoot,
   port: parseInt(process.env.PORT || "3002", 10),
   sqlitePath: process.env.SQLITE_PATH || "./data/db/dogfood.db",
+  uploadDir: process.env.UPLOAD_DIR || "./data/uploads",
   mcpBearerToken: process.env.MCP_BEARER_TOKEN || "",
   displayTz: process.env.DISPLAY_TZ || "UTC",
   nodeEnv: process.env.NODE_ENV || "development",
