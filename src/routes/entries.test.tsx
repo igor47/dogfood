@@ -1,14 +1,16 @@
 import { describe, expect, test } from "bun:test"
 import { listBowelEntries } from "@src/db/bowel-entries"
+import { listEventEntries } from "@src/db/event-entries"
 import { listFoodEntries } from "@src/db/food-entries"
-import { listHealthEntries } from "@src/db/health-entries"
+import { listSymptomEntries } from "@src/db/symptom-entries"
 import { useTestApp } from "@src/test/app"
 import {
   createTestBowelEntry,
   createTestDog,
+  createTestEventEntry,
   createTestFood,
   createTestFoodEntry,
-  createTestHealthEntry,
+  createTestSymptomEntry,
 } from "@src/test/factories/entries"
 import { makeRequest } from "@src/test/http"
 
@@ -205,17 +207,17 @@ describe("POST /entries/new/bowel", () => {
   })
 })
 
-describe("POST /entries/new/health", () => {
-  test("creates a health entry", async () => {
+describe("POST /entries/new/symptom", () => {
+  test("creates a symptom entry", async () => {
     const dog = createTestDog()
 
     const form = new FormData()
-    form.append("entry_type", "vomiting")
+    form.append("symptom_type", "vomiting")
     form.append("severity", "3")
     form.append("occurred_at", "2026-03-28T10:00:00Z")
     form.append("notes", "after breakfast")
 
-    const response = await makeRequest(testCtx.app, "/entries/new/health", {
+    const response = await makeRequest(testCtx.app, "/entries/new/symptom", {
       method: "POST",
       body: form,
     })
@@ -225,28 +227,91 @@ describe("POST /entries/new/health", () => {
     expect(html).toContain("vomiting")
     expect(html).toContain("severity: 3/5")
 
-    const entries = listHealthEntries(dog.id)
+    const entries = listSymptomEntries(dog.id)
     expect(entries).toHaveLength(1)
-    expect(entries[0]!.entry_type).toBe("vomiting")
+    expect(entries[0]!.symptom_type).toBe("vomiting")
     expect(entries[0]!.severity).toBe(3)
     expect(entries[0]!.notes).toBe("after breakfast")
   })
 
-  test("defaults severity to 1 when omitted", async () => {
+  test("defaults severity to 3 when omitted", async () => {
     const dog = createTestDog()
 
     const form = new FormData()
-    form.append("entry_type", "energy")
+    form.append("symptom_type", "energy_level")
 
-    const response = await makeRequest(testCtx.app, "/entries/new/health", {
+    const response = await makeRequest(testCtx.app, "/entries/new/symptom", {
       method: "POST",
       body: form,
     })
 
     expect(response.status).toBe(200)
 
-    const entries = listHealthEntries(dog.id)
-    expect(entries[0]!.severity).toBe(1)
+    const entries = listSymptomEntries(dog.id)
+    expect(entries[0]!.severity).toBe(3)
+  })
+})
+
+describe("POST /entries/new/event", () => {
+  test("creates an event entry", async () => {
+    const dog = createTestDog()
+
+    const form = new FormData()
+    form.append("event_type", "vet_visit")
+    form.append("occurred_at", "2026-03-28T10:00:00Z")
+    form.append("notes", "annual checkup")
+
+    const response = await makeRequest(testCtx.app, "/entries/new/event", {
+      method: "POST",
+      body: form,
+    })
+
+    expect(response.status).toBe(200)
+    const html = await response.text()
+    expect(html).toContain("vet_visit")
+
+    const entries = listEventEntries(dog.id)
+    expect(entries).toHaveLength(1)
+    expect(entries[0]!.event_type).toBe("vet_visit")
+    expect(entries[0]!.notes).toBe("annual checkup")
+  })
+
+  test("creates a medication event with extra fields", async () => {
+    const dog = createTestDog()
+
+    const form = new FormData()
+    form.append("event_type", "medication")
+    form.append("medication_name", "Apoquel")
+    form.append("medication_dose", "16mg daily")
+
+    const response = await makeRequest(testCtx.app, "/entries/new/event", {
+      method: "POST",
+      body: form,
+    })
+
+    expect(response.status).toBe(200)
+
+    const entries = listEventEntries(dog.id)
+    expect(entries[0]!.medication_name).toBe("Apoquel")
+    expect(entries[0]!.medication_dose).toBe("16mg daily")
+  })
+
+  test("creates a weight check with weight_kg", async () => {
+    const dog = createTestDog()
+
+    const form = new FormData()
+    form.append("event_type", "weight_check")
+    form.append("weight_kg", "25.5")
+
+    const response = await makeRequest(testCtx.app, "/entries/new/event", {
+      method: "POST",
+      body: form,
+    })
+
+    expect(response.status).toBe(200)
+
+    const entries = listEventEntries(dog.id)
+    expect(entries[0]!.weight_kg).toBe(25.5)
   })
 })
 
@@ -318,16 +383,16 @@ describe("edit entry routes", () => {
     expect(entries[0]!.color).toBe("dark brown")
   })
 
-  test("POST /entries/health/:id/edit updates health entry", async () => {
+  test("POST /entries/symptom/:id/edit updates symptom entry", async () => {
     const dog = createTestDog()
-    const entry = createTestHealthEntry(dog.id, { entry_type: "energy", severity: 3 })
+    const entry = createTestSymptomEntry(dog.id, { symptom_type: "energy_level", severity: 3 })
 
     const form = new FormData()
-    form.append("entry_type", "vomiting")
+    form.append("symptom_type", "vomiting")
     form.append("severity", "5")
     form.append("notes", "updated note")
 
-    const response = await makeRequest(testCtx.app, `/entries/health/${entry.id}/edit`, {
+    const response = await makeRequest(testCtx.app, `/entries/symptom/${entry.id}/edit`, {
       method: "POST",
       body: form,
     })
@@ -335,10 +400,32 @@ describe("edit entry routes", () => {
     expect(response.status).toBe(200)
     expect(response.headers.get("HX-Redirect")).toBe("/?saved=1")
 
-    const entries = listHealthEntries(dog.id)
-    expect(entries[0]!.entry_type).toBe("vomiting")
+    const entries = listSymptomEntries(dog.id)
+    expect(entries[0]!.symptom_type).toBe("vomiting")
     expect(entries[0]!.severity).toBe(5)
     expect(entries[0]!.notes).toBe("updated note")
+  })
+
+  test("POST /entries/event/:id/edit updates event entry", async () => {
+    const dog = createTestDog()
+    const entry = createTestEventEntry(dog.id, { event_type: "vet_visit" })
+
+    const form = new FormData()
+    form.append("event_type", "medication")
+    form.append("medication_name", "Apoquel")
+    form.append("notes", "started new medication")
+
+    const response = await makeRequest(testCtx.app, `/entries/event/${entry.id}/edit`, {
+      method: "POST",
+      body: form,
+    })
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("HX-Redirect")).toBe("/?saved=1")
+
+    const entries = listEventEntries(dog.id)
+    expect(entries[0]!.event_type).toBe("medication")
+    expect(entries[0]!.medication_name).toBe("Apoquel")
   })
 })
 
@@ -369,16 +456,29 @@ describe("delete entry routes", () => {
     expect(listBowelEntries(dog.id)).toHaveLength(0)
   })
 
-  test("DELETE /entries/health/:id removes the entry", async () => {
+  test("DELETE /entries/symptom/:id removes the entry", async () => {
     const dog = createTestDog()
-    const entry = createTestHealthEntry(dog.id)
+    const entry = createTestSymptomEntry(dog.id)
 
-    const response = await makeRequest(testCtx.app, `/entries/health/${entry.id}`, {
+    const response = await makeRequest(testCtx.app, `/entries/symptom/${entry.id}`, {
       method: "DELETE",
     })
 
     expect(response.status).toBe(200)
     expect(response.headers.get("HX-Redirect")).toBe("/?saved=1")
-    expect(listHealthEntries(dog.id)).toHaveLength(0)
+    expect(listSymptomEntries(dog.id)).toHaveLength(0)
+  })
+
+  test("DELETE /entries/event/:id removes the entry", async () => {
+    const dog = createTestDog()
+    const entry = createTestEventEntry(dog.id)
+
+    const response = await makeRequest(testCtx.app, `/entries/event/${entry.id}`, {
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("HX-Redirect")).toBe("/?saved=1")
+    expect(listEventEntries(dog.id)).toHaveLength(0)
   })
 })

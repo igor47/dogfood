@@ -2,9 +2,10 @@ import { describe, expect, test } from "bun:test"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { listBowelEntries } from "@src/db/bowel-entries"
+import { listEventEntries } from "@src/db/event-entries"
 import { listFoodEntries } from "@src/db/food-entries"
 import { createFood, listFoods } from "@src/db/foods"
-import { listHealthEntries } from "@src/db/health-entries"
+import { listSymptomEntries } from "@src/db/symptom-entries"
 import { useTestApp } from "@src/test/app"
 import {
   createTestBowelEntry,
@@ -175,21 +176,43 @@ describe("MCP tools", () => {
     expect(entries[0]!.color).toBe("brown")
   })
 
-  test("log_health creates entry", async () => {
+  test("log_symptom creates entry", async () => {
     const client = await createTestClient()
     const dog = createTestDog()
 
     const result = await client.callTool({
-      name: "log_health",
-      arguments: { entry_type: "vomiting", severity: 3, notes: "after breakfast" },
+      name: "log_symptom",
+      arguments: { symptom_type: "vomiting", severity: 3, notes: "after breakfast" },
     })
     expect(textContent(result)).toContain("vomiting")
     expect(textContent(result)).toContain("severity: 3/5")
 
-    const entries = listHealthEntries(dog.id)
+    const entries = listSymptomEntries(dog.id)
     expect(entries).toHaveLength(1)
-    expect(entries[0]!.entry_type).toBe("vomiting")
+    expect(entries[0]!.symptom_type).toBe("vomiting")
     expect(entries[0]!.notes).toBe("after breakfast")
+  })
+
+  test("log_event creates entry", async () => {
+    const client = await createTestClient()
+    const dog = createTestDog()
+
+    const result = await client.callTool({
+      name: "log_event",
+      arguments: {
+        event_type: "medication",
+        medication_name: "Apoquel",
+        medication_dose: "16mg",
+        notes: "morning dose",
+      },
+    })
+    expect(textContent(result)).toContain("medication")
+    expect(textContent(result)).toContain("Apoquel")
+
+    const entries = listEventEntries(dog.id)
+    expect(entries).toHaveLength(1)
+    expect(entries[0]!.event_type).toBe("medication")
+    expect(entries[0]!.medication_name).toBe("Apoquel")
   })
 
   test("get_recent_entries returns timeline", async () => {

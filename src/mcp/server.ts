@@ -4,8 +4,9 @@ import { registerGetDogProfileTool } from "@src/services/getDogProfile"
 import { registerGetRecentEntriesTool } from "@src/services/listEntries"
 import { registerListFoodsTool } from "@src/services/listFoods"
 import { registerLogBowelTool } from "@src/services/logBowel"
-import { registerLogHealthTool } from "@src/services/logHealth"
+import { registerLogEventTool } from "@src/services/logEvent"
 import { registerLogMealTool } from "@src/services/logMeal"
+import { registerLogSymptomTool } from "@src/services/logSymptom"
 import { registerLogTreatTool } from "@src/services/logTreat"
 
 export function createMcpServer(): McpServer {
@@ -17,7 +18,8 @@ export function createMcpServer(): McpServer {
   registerLogMealTool(server)
   registerLogTreatTool(server)
   registerLogBowelTool(server)
-  registerLogHealthTool(server)
+  registerLogSymptomTool(server)
+  registerLogEventTool(server)
   registerAddFoodTool(server)
   registerListFoodsTool(server)
   registerGetRecentEntriesTool(server)

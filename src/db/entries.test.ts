@@ -2,17 +2,19 @@ import { describe, expect, test } from "bun:test"
 import { config } from "@src/config"
 import { listBowelEntries } from "@src/db/bowel-entries"
 import { getDefaultDog, getDog } from "@src/db/dogs"
+import { listEventEntries } from "@src/db/event-entries"
 import { createFoodEntry, getFoodEntry, listFoodEntries } from "@src/db/food-entries"
 import { createFood, updateFood } from "@src/db/foods"
-import { listHealthEntries } from "@src/db/health-entries"
+import { listSymptomEntries } from "@src/db/symptom-entries"
 import { formatDatetime, toUtcSqlite } from "@src/lib/dates"
 import { listRecentEntries } from "@src/services/listEntries"
 import { useTestApp } from "@src/test/app"
 import {
   createTestBowelEntry,
   createTestDog,
+  createTestEventEntry,
   createTestFoodEntry,
-  createTestHealthEntry,
+  createTestSymptomEntry,
 } from "@src/test/factories/entries"
 
 useTestApp()
@@ -71,16 +73,51 @@ describe("bowel entries", () => {
   })
 })
 
-describe("health entries", () => {
-  test("create and list health entries", () => {
+describe("symptom entries", () => {
+  test("create and list symptom entries", () => {
     const dog = createTestDog()
-    const entry = createTestHealthEntry(dog.id, { entry_type: "vomiting", severity: 4 })
+    const entry = createTestSymptomEntry(dog.id, { symptom_type: "vomiting", severity: 4 })
 
-    expect(entry.entry_type).toBe("vomiting")
+    expect(entry.symptom_type).toBe("vomiting")
     expect(entry.severity).toBe(4)
 
-    const entries = listHealthEntries(dog.id)
+    const entries = listSymptomEntries(dog.id)
     expect(entries).toHaveLength(1)
+  })
+})
+
+describe("event entries", () => {
+  test("create and list event entries", () => {
+    const dog = createTestDog()
+    const entry = createTestEventEntry(dog.id, { event_type: "vet_visit" })
+
+    expect(entry.event_type).toBe("vet_visit")
+
+    const entries = listEventEntries(dog.id)
+    expect(entries).toHaveLength(1)
+  })
+
+  test("stores event-specific fields", () => {
+    const dog = createTestDog()
+    const entry = createTestEventEntry(dog.id, {
+      event_type: "medication",
+      medication_name: "Apoquel",
+      medication_dose: "16mg daily",
+    })
+
+    expect(entry.medication_name).toBe("Apoquel")
+    expect(entry.medication_dose).toBe("16mg daily")
+    expect(entry.weight_kg).toBeNull()
+  })
+
+  test("stores weight for weight_check", () => {
+    const dog = createTestDog()
+    const entry = createTestEventEntry(dog.id, {
+      event_type: "weight_check",
+      weight_kg: 25.5,
+    })
+
+    expect(entry.weight_kg).toBe(25.5)
   })
 })
 
@@ -89,25 +126,32 @@ describe("timeline entries", () => {
     const dog = createTestDog()
     createTestFoodEntry(dog.id, { meal_time: "2025-01-01 08:00:00" })
     createTestBowelEntry(dog.id, { occurred_at: "2025-01-01 09:00:00" })
-    createTestHealthEntry(dog.id, { occurred_at: "2025-01-01 10:00:00" })
+    createTestSymptomEntry(dog.id, { occurred_at: "2025-01-01 10:00:00" })
+    createTestEventEntry(dog.id, { occurred_at: "2025-01-01 11:00:00" })
 
     const entries = listRecentEntries(dog.id)
-    expect(entries).toHaveLength(3)
+    expect(entries).toHaveLength(4)
     // Most recent first
-    expect(entries[0]!.entry_type).toBe("health")
-    expect(entries[1]!.entry_type).toBe("bowel")
-    expect(entries[2]!.entry_type).toBe("food")
+    expect(entries[0]!.entry_type).toBe("event")
+    expect(entries[1]!.entry_type).toBe("symptom")
+    expect(entries[2]!.entry_type).toBe("bowel")
+    expect(entries[3]!.entry_type).toBe("food")
   })
 
   test("listRecentEntries filters by type", () => {
     const dog = createTestDog()
     createTestFoodEntry(dog.id)
     createTestBowelEntry(dog.id)
-    createTestHealthEntry(dog.id)
+    createTestSymptomEntry(dog.id)
+    createTestEventEntry(dog.id)
 
     const foodOnly = listRecentEntries(dog.id, 20, "food")
     expect(foodOnly).toHaveLength(1)
     expect(foodOnly[0]!.entry_type).toBe("food")
+
+    const symptomOnly = listRecentEntries(dog.id, 20, "symptom")
+    expect(symptomOnly).toHaveLength(1)
+    expect(symptomOnly[0]!.entry_type).toBe("symptom")
   })
 })
 
@@ -237,9 +281,17 @@ describe("date parsing", () => {
     expect(entry.occurred_at).toBe("2026-03-28 12:00:00")
   })
 
-  test("health entries store normalized UTC dates from ISO with offset", () => {
+  test("symptom entries store normalized UTC dates from ISO with offset", () => {
     const dog = createTestDog()
-    const entry = createTestHealthEntry(dog.id, {
+    const entry = createTestSymptomEntry(dog.id, {
+      occurred_at: "2026-03-28T05:00:00-07:00",
+    })
+    expect(entry.occurred_at).toBe("2026-03-28 12:00:00")
+  })
+
+  test("event entries store normalized UTC dates from ISO with offset", () => {
+    const dog = createTestDog()
+    const entry = createTestEventEntry(dog.id, {
       occurred_at: "2026-03-28T05:00:00-07:00",
     })
     expect(entry.occurred_at).toBe("2026-03-28 12:00:00")

@@ -14,8 +14,10 @@ function entryIcon(type: string): string {
       return "bi-egg-fried"
     case "bowel":
       return "bi-circle-fill"
-    case "health":
+    case "symptom":
       return "bi-heart-pulse"
+    case "event":
+      return "bi-calendar-event"
     default:
       return "bi-record-circle"
   }
@@ -27,8 +29,10 @@ function entryBadgeClass(type: string): string {
       return "bg-success"
     case "bowel":
       return "bg-warning text-dark"
-    case "health":
+    case "symptom":
       return "bg-info"
+    case "event":
+      return "bg-primary"
     default:
       return "bg-secondary"
   }
@@ -77,13 +81,23 @@ export const EntryTimeline = ({ entries, showTypeFilter, currentType }: EntryTim
           </button>
           <button
             type="button"
-            hx-get="/timeline?type=health"
+            hx-get="/timeline?type=symptom"
             hx-target="#entry-timeline"
             hx-swap="outerHTML"
-            hx-push-url="/?type=health"
-            class={`btn btn-sm ${currentType === "health" ? "btn-info" : "btn-outline-info"}`}
+            hx-push-url="/?type=symptom"
+            class={`btn btn-sm ${currentType === "symptom" ? "btn-info" : "btn-outline-info"}`}
           >
-            Health
+            Symptom
+          </button>
+          <button
+            type="button"
+            hx-get="/timeline?type=event"
+            hx-target="#entry-timeline"
+            hx-swap="outerHTML"
+            hx-push-url="/?type=event"
+            class={`btn btn-sm ${currentType === "event" ? "btn-primary" : "btn-outline-primary"}`}
+          >
+            Event
           </button>
         </div>
       )}

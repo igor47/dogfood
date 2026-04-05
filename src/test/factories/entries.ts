@@ -1,12 +1,14 @@
 import type { BowelColor, Consistency } from "@src/db/bowel-entries"
 import { createBowelEntry } from "@src/db/bowel-entries"
 import { createDog } from "@src/db/dogs"
+import type { EventType } from "@src/db/event-entries"
+import { createEventEntry } from "@src/db/event-entries"
 import type { EntryKind } from "@src/db/food-entries"
 import { createFoodEntry } from "@src/db/food-entries"
 import type { FoodCategory } from "@src/db/foods"
 import { createFood } from "@src/db/foods"
-import type { HealthEntryType, Severity } from "@src/db/health-entries"
-import { createHealthEntry } from "@src/db/health-entries"
+import type { Severity, SymptomType } from "@src/db/symptom-entries"
+import { createSymptomEntry } from "@src/db/symptom-entries"
 
 export function createTestDog(overrides?: { name?: string; breed?: string }) {
   return createDog(overrides?.name ?? "Fido", {
@@ -60,14 +62,34 @@ export function createTestBowelEntry(
   })
 }
 
-export function createTestHealthEntry(
+export function createTestSymptomEntry(
   dogId: string,
-  overrides?: { entry_type?: HealthEntryType; severity?: Severity; occurred_at?: string }
+  overrides?: { symptom_type?: SymptomType; severity?: Severity; occurred_at?: string }
 ) {
-  return createHealthEntry({
+  return createSymptomEntry({
     dog_id: dogId,
-    entry_type: overrides?.entry_type ?? "energy",
+    symptom_type: overrides?.symptom_type ?? "vomiting",
     severity: overrides?.severity ?? 3,
     occurred_at: overrides?.occurred_at ?? new Date().toISOString(),
+  })
+}
+
+export function createTestEventEntry(
+  dogId: string,
+  overrides?: {
+    event_type?: EventType
+    occurred_at?: string
+    weight_kg?: number
+    medication_name?: string
+    medication_dose?: string
+  }
+) {
+  return createEventEntry({
+    dog_id: dogId,
+    event_type: overrides?.event_type ?? "vet_visit",
+    occurred_at: overrides?.occurred_at ?? new Date().toISOString(),
+    weight_kg: overrides?.weight_kg,
+    medication_name: overrides?.medication_name,
+    medication_dose: overrides?.medication_dose,
   })
 }

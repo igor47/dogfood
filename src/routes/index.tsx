@@ -12,7 +12,7 @@ export const indexRoutes = new Hono()
 // HTMX partial: returns just the timeline fragment
 indexRoutes.get("/timeline", (c) => {
   const dog = getDefaultDog()
-  const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
+  const type = (c.req.query("type") as "food" | "bowel" | "symptom" | "event" | "all") || "all"
   const entries = listRecentEntries(dog.id, 50, type)
   return c.html(<EntryTimeline entries={entries} showTypeFilter currentType={type} />)
 })
@@ -20,7 +20,7 @@ indexRoutes.get("/timeline", (c) => {
 indexRoutes.get("/", (c) => {
   const dog = getDefaultDog()
   const saved = c.req.query("saved") === "1"
-  const type = (c.req.query("type") as "food" | "bowel" | "health" | "all") || "all"
+  const type = (c.req.query("type") as "food" | "bowel" | "symptom" | "event" | "all") || "all"
   const timelineEntries = listRecentEntries(dog.id, 50, type)
   const today = todayUtcRange()
   const todaysFood = listFoodEntries(dog.id, { after: today.start, before: today.end })
@@ -120,8 +120,11 @@ indexRoutes.get("/", (c) => {
                 <a href="/entries/new/bowel" class="btn btn-sm btn-outline-warning">
                   <i class="bi bi-circle-fill"></i> Bowel
                 </a>
-                <a href="/entries/new/health" class="btn btn-sm btn-outline-info">
-                  <i class="bi bi-heart-pulse"></i> Health
+                <a href="/entries/new/symptom" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-heart-pulse"></i> Symptom
+                </a>
+                <a href="/entries/new/event" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-calendar-event"></i> Event
                 </a>
               </div>
             </div>

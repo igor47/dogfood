@@ -1,25 +1,25 @@
-import type { HealthEntry } from "@src/db/health-entries"
-import { HEALTH_ENTRY_TYPES, SEVERITY_LEVELS } from "@src/db/health-entries"
+import type { SymptomEntry } from "@src/db/symptom-entries"
+import { SEVERITY_LEVELS, SYMPTOM_TYPES } from "@src/db/symptom-entries"
 import { toLocalInputValue } from "@src/lib/dates"
 
-interface HealthEntryFormProps {
-  entry?: HealthEntry
+interface SymptomEntryFormProps {
+  entry?: SymptomEntry
 }
 
-export const HealthEntryForm = ({ entry }: HealthEntryFormProps) => {
-  const action = entry ? `/entries/health/${entry.id}/edit` : "/entries/new/health"
-  const submitLabel = entry ? "Save" : "Log Health Observation"
+export const SymptomEntryForm = ({ entry }: SymptomEntryFormProps) => {
+  const action = entry ? `/entries/symptom/${entry.id}/edit` : "/entries/new/symptom"
+  const submitLabel = entry ? "Save" : "Log Symptom"
 
   return (
     <form hx-post={action} hx-target="#form-result" hx-swap="innerHTML">
       <div class="row mb-3">
         <div class="col-md-6">
-          <label for="entry_type" class="form-label">
-            Type
+          <label for="symptom_type" class="form-label">
+            Symptom
           </label>
-          <select class="form-select" id="entry_type" name="entry_type" required>
-            {HEALTH_ENTRY_TYPES.map((t) => (
-              <option value={t.value} selected={entry?.entry_type === t.value}>
+          <select class="form-select" id="symptom_type" name="symptom_type" required>
+            {SYMPTOM_TYPES.map((t) => (
+              <option value={t.value} selected={entry?.symptom_type === t.value}>
                 {t.label}
               </option>
             ))}
@@ -74,7 +74,7 @@ export const HealthEntryForm = ({ entry }: HealthEntryFormProps) => {
           </a>
           <button
             type="button"
-            hx-delete={`/entries/health/${entry.id}`}
+            hx-delete={`/entries/symptom/${entry.id}`}
             hx-confirm="Delete this entry?"
             hx-target="#form-result"
             hx-swap="innerHTML"

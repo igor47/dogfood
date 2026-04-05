@@ -6,14 +6,14 @@ import { z } from "zod"
 export interface TimelineEntry {
   id: string
   dog_id: string
-  entry_type: "food" | "bowel" | "health"
+  entry_type: "food" | "bowel" | "symptom" | "event"
   entry_kind: string | null
   summary: string
   occurred_at: string
   created_at: string
 }
 
-export type EntryTypeFilter = "food" | "bowel" | "health" | "all"
+export type EntryTypeFilter = "food" | "bowel" | "symptom" | "event" | "all"
 
 export function listRecentEntries(
   dogId: string,
@@ -46,12 +46,23 @@ export function listRecentEntries(
     `)
   }
 
-  if (type === "all" || type === "health") {
+  if (type === "all" || type === "symptom") {
     parts.push(`
-      SELECT id, dog_id, 'health' AS entry_type, NULL AS entry_kind,
-        entry_type || ' (severity: ' || severity || '/5)' AS summary,
+      SELECT id, dog_id, 'symptom' AS entry_type, NULL AS entry_kind,
+        symptom_type || ' (severity: ' || severity || '/5)' AS summary,
         occurred_at, created_at
-      FROM health_entries WHERE dog_id = ?
+      FROM symptom_entries WHERE dog_id = ?
+    `)
+  }
+
+  if (type === "all" || type === "event") {
+    parts.push(`
+      SELECT id, dog_id, 'event' AS entry_type, NULL AS entry_kind,
+        event_type ||
+        COALESCE(' — ' || medication_name, '') ||
+        COALESCE(' — ' || weight_kg || ' kg', '') AS summary,
+        occurred_at, created_at
+      FROM event_entries WHERE dog_id = ?
     `)
   }
 
@@ -71,7 +82,7 @@ export function registerGetRecentEntriesTool(server: McpServer) {
       inputSchema: {
         limit: z.number().optional().default(20),
         entry_type: z
-          .enum(["food", "bowel", "health", "all"])
+          .enum(["food", "bowel", "symptom", "event", "all"])
           .optional()
           .default("all")
           .describe("Filter by entry type"),
@@ -79,7 +90,7 @@ export function registerGetRecentEntriesTool(server: McpServer) {
     },
     async ({ limit, entry_type }) => {
       const dog = getDefaultDog()
-      const entries = listRecentEntries(dog.id, limit, entry_type)
+      const entries = listRecentEntries(dog.id, limit, entry_type as EntryTypeFilter)
       if (entries.length === 0) {
         return { content: [{ type: "text" as const, text: "No entries found." }] }
       }
