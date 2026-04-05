@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { registerAddFoodTool } from "@src/services/addFood"
+import { registerAttachUploadTool } from "@src/services/attachUpload"
 import { registerGetDogProfileTool } from "@src/services/getDogProfile"
 import { registerGetRecentEntriesTool } from "@src/services/listEntries"
 import { registerListFoodsTool } from "@src/services/listFoods"
@@ -24,6 +25,7 @@ export function createMcpServer(): McpServer {
   registerListFoodsTool(server)
   registerGetRecentEntriesTool(server)
   registerGetDogProfileTool(server)
+  registerAttachUploadTool(server)
 
   return server
 }

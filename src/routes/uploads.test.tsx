@@ -1,25 +1,12 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { mkdirSync, readdirSync, rmSync } from "node:fs"
-import { tmpdir } from "node:os"
-import { join } from "node:path"
-import { listUploadsForEntry, setUploadDir } from "@src/db/uploads"
+import { describe, expect, test } from "bun:test"
+import { readdirSync } from "node:fs"
+import { config } from "@src/config"
+import { listUploadsForEntry } from "@src/db/uploads"
 import { useTestApp } from "@src/test/app"
 import { createTestDog, createTestEventEntry } from "@src/test/factories/entries"
 import { makeRequest } from "@src/test/http"
 
 const testCtx = useTestApp()
-
-// Use a temp directory for uploads during tests
-const testUploadDir = join(tmpdir(), `dogfood-test-uploads-${Date.now()}`)
-
-beforeAll(() => {
-  mkdirSync(testUploadDir, { recursive: true })
-  setUploadDir(testUploadDir)
-})
-
-afterAll(() => {
-  rmSync(testUploadDir, { recursive: true, force: true })
-})
 
 // Tiny 1x1 red PNG (68 bytes)
 const PNG_BYTES = new Uint8Array([
@@ -60,7 +47,7 @@ describe("uploads on event create", () => {
     expect(uploads[0]!.content_type).toBe("image/png")
 
     // Verify file exists on disk
-    const files = readdirSync(testUploadDir)
+    const files = readdirSync(config.uploadDir)
     expect(files.length).toBeGreaterThanOrEqual(1)
   })
 
@@ -188,5 +175,54 @@ describe("uploads on edit", () => {
     const uploads = listUploadsForEntry("event", entry.id)
     expect(uploads).toHaveLength(1)
     expect(uploads[0]!.original_filename).toBe("edit-upload.png")
+  })
+})
+
+describe("POST /api/uploads", () => {
+  test("uploads a file and returns JSON with upload_id", async () => {
+    createTestDog()
+
+    const form = new FormData()
+    form.append("file", testPngFile("api-upload.png"))
+
+    const response = await makeRequest(testCtx.app, "/api/uploads", {
+      method: "POST",
+      body: form,
+    })
+
+    expect(response.status).toBe(200)
+    const json = (await response.json()) as Record<string, unknown>
+    expect(json.upload_id).toBeTruthy()
+    expect(json.original_filename).toBe("api-upload.png")
+    expect(json.content_type).toBe("image/png")
+    expect(json.size_bytes).toBe(PNG_BYTES.length)
+  })
+
+  test("rejects missing file field", async () => {
+    const form = new FormData()
+    form.append("not_file", "hello")
+
+    const response = await makeRequest(testCtx.app, "/api/uploads", {
+      method: "POST",
+      body: form,
+    })
+
+    expect(response.status).toBe(400)
+    const json = (await response.json()) as Record<string, unknown>
+    expect(json.error).toContain("Missing")
+  })
+
+  test("rejects disallowed content type", async () => {
+    const form = new FormData()
+    form.append("file", new File(["hello"], "test.txt", { type: "text/plain" }))
+
+    const response = await makeRequest(testCtx.app, "/api/uploads", {
+      method: "POST",
+      body: form,
+    })
+
+    expect(response.status).toBe(400)
+    const json = (await response.json()) as Record<string, unknown>
+    expect(json.error).toContain("not allowed")
   })
 })

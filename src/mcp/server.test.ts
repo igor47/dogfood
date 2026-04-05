@@ -6,6 +6,7 @@ import { listEventEntries } from "@src/db/event-entries"
 import { listFoodEntries } from "@src/db/food-entries"
 import { createFood, listFoods } from "@src/db/foods"
 import { listSymptomEntries } from "@src/db/symptom-entries"
+import { listUploadsForEntry, saveUploadedFile } from "@src/db/uploads"
 import { useTestApp } from "@src/test/app"
 import {
   createTestBowelEntry,
@@ -252,5 +253,57 @@ describe("MCP tools", () => {
     const result = await client.callTool({ name: "get_dog_profile", arguments: {} })
     const text = textContent(result)
     expect(text).toContain("Name: Rex")
+  })
+
+  test("attach_upload links an upload to an entry", async () => {
+    const client = await createTestClient()
+    const dog = createTestDog()
+
+    // Create an event via MCP
+    const eventResult = await client.callTool({
+      name: "log_event",
+      arguments: { event_type: "vet_visit", notes: "checkup" },
+    })
+    const eventSc = eventResult.structuredContent as Record<string, unknown>
+    const entryId = eventSc.entry_id as string
+
+    // Create an upload directly (simulating POST /api/uploads)
+    const pngBytes = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44,
+      0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90,
+      0x77, 0x53, 0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0xf8,
+      0xcf, 0xc0, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc, 0x33, 0x00, 0x00, 0x00,
+      0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+    ])
+    const file = new File([pngBytes], "receipt.png", { type: "image/png" })
+    const upload = await saveUploadedFile(file)
+    if ("error" in upload) throw new Error(upload.error)
+
+    // Attach via MCP tool
+    const attachResult = await client.callTool({
+      name: "attach_upload",
+      arguments: { entry_type: "event", entry_id: entryId, upload_id: upload.id },
+    })
+    const attachSc = attachResult.structuredContent as Record<string, unknown>
+    expect(attachSc.entry_id).toBe(entryId)
+    expect(attachSc.upload_id).toBe(upload.id)
+    expect(attachSc.total_attachments).toBe(1)
+
+    // Verify junction record
+    const uploads = listUploadsForEntry("event", entryId)
+    expect(uploads).toHaveLength(1)
+    expect(uploads[0]!.id).toBe(upload.id)
+  })
+
+  test("attach_upload returns error for nonexistent upload", async () => {
+    const client = await createTestClient()
+    createTestDog()
+
+    const result = await client.callTool({
+      name: "attach_upload",
+      arguments: { entry_type: "event", entry_id: "fake-entry", upload_id: "fake-upload" },
+    })
+    expect(result.isError).toBe(true)
+    expect(textContent(result)).toContain("Upload not found")
   })
 })

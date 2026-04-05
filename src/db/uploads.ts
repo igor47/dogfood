@@ -24,16 +24,6 @@ export interface Upload {
   created_at: string
 }
 
-let uploadDir = config.uploadDir
-
-export function setUploadDir(dir: string) {
-  uploadDir = dir
-}
-
-export function getUploadDir(): string {
-  return uploadDir
-}
-
 function extFromContentType(contentType: string): string {
   switch (contentType) {
     case "image/jpeg":
@@ -52,7 +42,7 @@ function extFromContentType(contentType: string): string {
 }
 
 export function uploadFilePath(id: string, contentType: string): string {
-  return join(uploadDir, `${id}.${extFromContentType(contentType)}`)
+  return join(config.uploadDir, `${id}.${extFromContentType(contentType)}`)
 }
 
 export function createUpload(data: {
@@ -129,7 +119,7 @@ export async function saveUploadedFile(file: File): Promise<Upload | { error: st
   })
 
   const path = uploadFilePath(upload.id, upload.content_type)
-  mkdirSync(uploadDir, { recursive: true })
+  mkdirSync(config.uploadDir, { recursive: true })
   await Bun.write(path, file)
 
   return upload

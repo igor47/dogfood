@@ -4,6 +4,7 @@ import { Layout } from "./components/Layout"
 import { logger } from "./lib/logger"
 import { applyMiddleware } from "./middleware"
 import { cachingServeStatic } from "./middleware/cachingServeStatic"
+import { apiRoutes } from "./routes/api"
 import { entriesRoutes } from "./routes/entries"
 import { foodsRoutes } from "./routes/foods"
 import { healthRoutes } from "./routes/health"
@@ -29,6 +30,9 @@ export function createApp() {
 
   // MCP endpoint (JSON-RPC, before JSX renderer)
   app.route("/", mcpRoutes)
+
+  // Upload API (JSON, before JSX renderer)
+  app.route("/", apiRoutes)
 
   // JSX renderer — use the layout for all routes
   app.use(
