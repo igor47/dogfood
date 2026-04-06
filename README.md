@@ -64,6 +64,8 @@ volumes:
 | `SQLITE_PATH` | `./data/db/dogfood.db` | SQLite database file path |
 | `MCP_BEARER_TOKEN` | *(none)* | Bearer token for MCP endpoint auth. If empty, `/mcp` is open. |
 | `UPLOAD_DIR` | `./data/uploads` | Directory for uploaded file attachments |
+| `PUBLIC_URL` | *(none)* | Public base URL (e.g. `https://dogfood.example.com`). Required for MCP upload flow. |
+| `UPLOAD_SIGNING_KEY` | *(random per process)* | HMAC key for signed upload URLs. Auto-generated if not set; set explicitly for URL persistence across restarts. |
 | `DISPLAY_TZ` | `UTC` | Timezone for displaying dates (e.g. `America/Los_Angeles`). Dates are stored in UTC. |
 
 ### Data persistence

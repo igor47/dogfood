@@ -178,14 +178,21 @@ describe("uploads on edit", () => {
   })
 })
 
-describe("POST /api/uploads", () => {
-  test("uploads a file and returns JSON with upload_id", async () => {
+describe("POST /api/uploads/signed", () => {
+  function signedUrl(): string {
+    const { createSignedUploadUrl } = require("@src/lib/signing")
+    const { url } = createSignedUploadUrl("http://localhost")
+    // Extract just the path + query from the full URL
+    return url.replace("http://localhost", "")
+  }
+
+  test("uploads a file with valid signature", async () => {
     createTestDog()
 
     const form = new FormData()
-    form.append("file", testPngFile("api-upload.png"))
+    form.append("file", testPngFile("signed-upload.png"))
 
-    const response = await makeRequest(testCtx.app, "/api/uploads", {
+    const response = await makeRequest(testCtx.app, signedUrl(), {
       method: "POST",
       body: form,
     })
@@ -193,30 +200,55 @@ describe("POST /api/uploads", () => {
     expect(response.status).toBe(200)
     const json = (await response.json()) as Record<string, unknown>
     expect(json.upload_id).toBeTruthy()
-    expect(json.original_filename).toBe("api-upload.png")
+    expect(json.original_filename).toBe("signed-upload.png")
     expect(json.content_type).toBe("image/png")
     expect(json.size_bytes).toBe(PNG_BYTES.length)
   })
 
-  test("rejects missing file field", async () => {
+  test("rejects expired signature", async () => {
+    const { createHmac } = require("node:crypto")
+    const { config } = require("@src/config")
+    const expired = Date.now() - 1000
+    const sig = createHmac("sha256", config.uploadSigningKey)
+      .update(`upload:${expired}`)
+      .digest("hex")
+
     const form = new FormData()
-    form.append("not_file", "hello")
+    form.append("file", testPngFile("expired.png"))
 
-    const response = await makeRequest(testCtx.app, "/api/uploads", {
-      method: "POST",
-      body: form,
-    })
+    const response = await makeRequest(
+      testCtx.app,
+      `/api/uploads/signed?expires=${expired}&sig=${sig}`,
+      { method: "POST", body: form }
+    )
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(403)
     const json = (await response.json()) as Record<string, unknown>
-    expect(json.error).toContain("Missing")
+    expect(json.error).toContain("expired")
+  })
+
+  test("rejects invalid signature", async () => {
+    const expires = Date.now() + 60000
+
+    const form = new FormData()
+    form.append("file", testPngFile("bad-sig.png"))
+
+    const response = await makeRequest(
+      testCtx.app,
+      `/api/uploads/signed?expires=${expires}&sig=invalidsignature`,
+      { method: "POST", body: form }
+    )
+
+    expect(response.status).toBe(403)
+    const json = (await response.json()) as Record<string, unknown>
+    expect(json.error).toContain("Invalid signature")
   })
 
   test("rejects disallowed content type", async () => {
     const form = new FormData()
     form.append("file", new File(["hello"], "test.txt", { type: "text/plain" }))
 
-    const response = await makeRequest(testCtx.app, "/api/uploads", {
+    const response = await makeRequest(testCtx.app, signedUrl(), {
       method: "POST",
       body: form,
     })

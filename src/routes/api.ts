@@ -1,22 +1,23 @@
-import { config } from "@src/config"
 import { saveUploadedFile } from "@src/db/uploads"
+import { validateSignedUpload } from "@src/lib/signing"
 import { Hono } from "hono"
 
 export const apiRoutes = new Hono()
 
-// Bearer token auth middleware for API routes
-apiRoutes.use("/api/*", async (c, next) => {
-  if (config.mcpBearerToken) {
-    const auth = c.req.header("Authorization")
-    if (auth !== `Bearer ${config.mcpBearerToken}`) {
-      return c.json({ error: "Unauthorized" }, 401)
-    }
-  }
-  return next()
-})
+// Signed upload endpoint — no auth needed, the signature is the auth
+apiRoutes.post("/api/uploads/signed", async (c) => {
+  const expires = c.req.query("expires")
+  const sig = c.req.query("sig")
 
-// Upload a file, get back an upload_id to use with the attach_upload MCP tool
-apiRoutes.post("/api/uploads", async (c) => {
+  if (!expires || !sig) {
+    return c.json({ error: "Missing expires or sig query parameters" }, 400)
+  }
+
+  const validation = validateSignedUpload(expires, sig)
+  if (!validation.valid) {
+    return c.json({ error: validation.error }, 403)
+  }
+
   const body = await c.req.parseBody()
   const file = body.file
 

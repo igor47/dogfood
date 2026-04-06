@@ -9,6 +9,7 @@ import { registerLogEventTool } from "@src/services/logEvent"
 import { registerLogMealTool } from "@src/services/logMeal"
 import { registerLogSymptomTool } from "@src/services/logSymptom"
 import { registerLogTreatTool } from "@src/services/logTreat"
+import { registerRequestUploadTool } from "@src/services/requestUpload"
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -25,6 +26,7 @@ export function createMcpServer(): McpServer {
   registerListFoodsTool(server)
   registerGetRecentEntriesTool(server)
   registerGetDogProfileTool(server)
+  registerRequestUploadTool(server)
   registerAttachUploadTool(server)
 
   return server
