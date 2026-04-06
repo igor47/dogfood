@@ -1,17 +1,15 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { getDb } from "@src/db"
+import type { BowelEntry } from "@src/db/bowel-entries"
+import { getBowelEntry } from "@src/db/bowel-entries"
 import { getDefaultDog } from "@src/db/dogs"
+import type { EventEntry } from "@src/db/event-entries"
+import { getEventEntry } from "@src/db/event-entries"
+import type { FoodEntry } from "@src/db/food-entries"
+import { getFoodEntry } from "@src/db/food-entries"
+import type { SymptomEntry } from "@src/db/symptom-entries"
+import { getSymptomEntry } from "@src/db/symptom-entries"
 import { z } from "zod"
-
-export interface TimelineEntry {
-  id: string
-  dog_id: string
-  entry_type: "food" | "bowel" | "symptom" | "event"
-  entry_kind: string | null
-  summary: string
-  occurred_at: string
-  created_at: string
-}
 
 export type EntryTypeFilter = "food" | "bowel" | "symptom" | "event" | "all"
 
@@ -22,8 +20,20 @@ export interface ListEntriesOpts {
   before?: string
 }
 
-export function listRecentEntries(dogId: string, opts: ListEntriesOpts = {}): TimelineEntry[] {
-  const { limit = 20, type = "all", after, before } = opts
+interface EntryRef {
+  id: string
+  entry_type: "food" | "bowel" | "symptom" | "event"
+  occurred_at: string
+}
+
+export type TimelineEntry =
+  | { entry_type: "food"; entry: FoodEntry }
+  | { entry_type: "bowel"; entry: BowelEntry }
+  | { entry_type: "symptom"; entry: SymptomEntry }
+  | { entry_type: "event"; entry: EventEntry }
+
+function queryEntryRefs(dogId: string, opts: ListEntriesOpts): EntryRef[] {
+  const { limit, type = "all", after, before } = opts
   const db = getDb()
 
   const parts: string[] = []
@@ -39,7 +49,7 @@ export function listRecentEntries(dogId: string, opts: ListEntriesOpts = {}): Ti
     beforeOp = "<"
   }
 
-  function addPart(sql: string, dateCol: string, dogIdCol = "dog_id") {
+  function addPart(table: string, entryType: string, dateCol = "occurred_at", dogIdCol = "dog_id") {
     const clauses = [`${dogIdCol} = ?`]
     params.push(dogId)
     if (after) {
@@ -50,62 +60,61 @@ export function listRecentEntries(dogId: string, opts: ListEntriesOpts = {}): Ti
       clauses.push(`${dateCol} ${beforeOp} ?`)
       params.push(beforeBound)
     }
-    parts.push(sql.replace("__WHERE__", clauses.join(" AND ")))
+    parts.push(
+      `SELECT id, '${entryType}' AS entry_type, ${dateCol} AS occurred_at FROM ${table} WHERE ${clauses.join(" AND ")}`
+    )
   }
 
   if (type === "all" || type === "food") {
-    addPart(
-      `SELECT food_entries.id, food_entries.dog_id, 'food' AS entry_type, food_entries.entry_kind,
-        food_entries.entry_kind || ': ' || food_entries.food_name ||
-        COALESCE(' — ' || food_entries.quantity || ' ' || food_entries.unit, '') ||
-        COALESCE(' (' || CAST(food_entries.quantity * foods.calories_per_unit AS INTEGER) || ' cal)', '') AS summary,
-        food_entries.occurred_at, food_entries.created_at
-      FROM food_entries
-      LEFT JOIN foods ON food_entries.food_id = foods.id
-      WHERE __WHERE__`,
-      "food_entries.occurred_at",
-      "food_entries.dog_id"
-    )
+    addPart("food_entries", "food")
   }
-
   if (type === "all" || type === "bowel") {
-    addPart(
-      `SELECT id, dog_id, 'bowel' AS entry_type, NULL AS entry_kind,
-        'Bowel movement (consistency: ' || consistency || '/7)' AS summary,
-        occurred_at, created_at
-      FROM bowel_entries WHERE __WHERE__`,
-      "occurred_at"
-    )
+    addPart("bowel_entries", "bowel")
   }
-
   if (type === "all" || type === "symptom") {
-    addPart(
-      `SELECT id, dog_id, 'symptom' AS entry_type, NULL AS entry_kind,
-        symptom_type || ' (severity: ' || severity || '/5)' AS summary,
-        occurred_at, created_at
-      FROM symptom_entries WHERE __WHERE__`,
-      "occurred_at"
-    )
+    addPart("symptom_entries", "symptom")
   }
-
   if (type === "all" || type === "event") {
-    addPart(
-      `SELECT id, dog_id, 'event' AS entry_type, NULL AS entry_kind,
-        event_type ||
-        COALESCE(' — ' || medication_name, '') ||
-        COALESCE(' — ' || weight_kg || ' kg', '') AS summary,
-        occurred_at, created_at
-      FROM event_entries WHERE __WHERE__`,
-      "occurred_at"
-    )
+    addPart("event_entries", "event")
   }
 
   if (parts.length === 0) return []
 
-  params.push(limit)
-  const sql = `${parts.join(" UNION ALL ")} ORDER BY occurred_at DESC LIMIT ?`
+  let sql = `${parts.join(" UNION ALL ")} ORDER BY occurred_at DESC`
+  if (limit) {
+    sql += " LIMIT ?"
+    params.push(limit)
+  }
+  return db.query(sql).all(...params) as EntryRef[]
+}
 
-  return db.query(sql).all(...params) as TimelineEntry[]
+export function listRecentEntries(dogId: string, opts: ListEntriesOpts = {}): TimelineEntry[] {
+  const refs = queryEntryRefs(dogId, opts)
+
+  return refs
+    .map((ref): TimelineEntry | null => {
+      switch (ref.entry_type) {
+        case "food": {
+          const entry = getFoodEntry(ref.id)
+          return entry ? { entry_type: "food", entry } : null
+        }
+        case "bowel": {
+          const entry = getBowelEntry(ref.id)
+          return entry ? { entry_type: "bowel", entry } : null
+        }
+        case "symptom": {
+          const entry = getSymptomEntry(ref.id)
+          return entry ? { entry_type: "symptom", entry } : null
+        }
+        case "event": {
+          const entry = getEventEntry(ref.id)
+          return entry ? { entry_type: "event", entry } : null
+        }
+        default:
+          return null
+      }
+    })
+    .filter((e): e is TimelineEntry => e !== null)
 }
 
 export function registerGetRecentEntriesTool(server: McpServer) {
@@ -128,7 +137,10 @@ export function registerGetRecentEntriesTool(server: McpServer) {
       if (entries.length === 0) {
         return { content: [{ type: "text" as const, text: "No entries found." }] }
       }
-      const lines = entries.map((e) => `[${e.occurred_at}] ${e.entry_type}: ${e.summary}`)
+      const lines = entries.map((e) => {
+        const occurred = "occurred_at" in e.entry ? e.entry.occurred_at : ""
+        return `[${occurred}] ${e.entry_type}: ${JSON.stringify(e.entry)}`
+      })
       return { content: [{ type: "text" as const, text: lines.join("\n") }] }
     }
   )

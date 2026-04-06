@@ -243,7 +243,7 @@ describe("MCP tools", () => {
     })
     const text = textContent(result)
     expect(text).toContain("Kibble")
-    expect(text).toContain("Bowel movement")
+    expect(text).toContain("bowel")
   })
 
   test("get_dog_profile returns dog info", async () => {
@@ -257,7 +257,7 @@ describe("MCP tools", () => {
 
   test("attach_upload links an upload to an entry", async () => {
     const client = await createTestClient()
-    const dog = createTestDog()
+    createTestDog()
 
     // Create an event via MCP
     const eventResult = await client.callTool({

@@ -255,13 +255,16 @@ describe("computed calories", () => {
     expect(entries[0]!.calories).toBe(700)
   })
 
-  test("timeline summary includes computed calories", () => {
+  test("timeline entries include computed calories for food", () => {
     const dog = createTestDog()
     const food = createFood({ name: "Kibble", unit: "cups", calories_per_unit: 350 })
     createTestFoodEntry(dog.id, { food_id: food.id, quantity: 1 })
 
     const entries = listRecentEntries(dog.id, { limit: 10, type: "food" })
-    expect(entries[0]!.summary).toContain("350 cal")
+    expect(entries[0]!.entry_type).toBe("food")
+    if (entries[0]!.entry_type === "food") {
+      expect(entries[0]!.entry.calories).toBe(350)
+    }
   })
 })
 

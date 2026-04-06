@@ -15,7 +15,7 @@ indexRoutes.get("/timeline", (c) => {
   const type = (c.req.query("type") as "food" | "bowel" | "symptom" | "event" | "all") || "all"
   const after = c.req.query("after") || undefined
   const before = c.req.query("before") || undefined
-  const entries = listRecentEntries(dog.id, { limit: 50, type, after, before })
+  const entries = listRecentEntries(dog.id, { type, after, before })
 
   // Build equivalent /?... URL for browser history
   const params = new URLSearchParams()
@@ -42,7 +42,7 @@ indexRoutes.get("/", (c) => {
   const type = (c.req.query("type") as "food" | "bowel" | "symptom" | "event" | "all") || "all"
   const after = c.req.query("after") || undefined
   const before = c.req.query("before") || undefined
-  const timelineEntries = listRecentEntries(dog.id, { limit: 50, type, after, before })
+  const timelineEntries = listRecentEntries(dog.id, { type, after, before })
   const today = todayUtcRange()
   const todaysFood = listFoodEntries(dog.id, { after: today.start, before: today.end })
   const todaysTotalCal = todaysFood.reduce((sum, f) => sum + (f.calories ?? 0), 0)
